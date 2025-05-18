@@ -1,10 +1,118 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 <head>
-  <title>Welcome to OpenXeroth</title>
+    <title>OpenXeroth | Real-Time Conservation AI</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Slab|Open+Sans" />
+    <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+    <style>
+        body {{
+            font-family: 'Open Sans', sans-serif;
+        }}
+        h1, h2, h3 {{
+            font-family: 'Roboto Slab', serif;
+        }}
+        .button.primary {{
+            background-color: #1A1F3D;
+        }}
+    </style>
 </head>
-<body>
-  <h1>Hello, world!</h1>
-  <p>This is the OpenXeroth GitHub Pages site.</p>
+<body class="is-preload">
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <header id="header" class="alt">
+            <h1><a href="index.html">OpenXeroth</a></h1>
+            <nav>
+                <a href="#menu">Menu</a>
+            </nav>
+        </header>
+
+        <!-- Menu -->
+        <nav id="menu">
+            <div class="inner">
+                <h2>Menu</h2>
+                <ul class="links">
+                    <li><a href="#about">About Hosana</a></li>
+                    <li><a href="#architecture">Architecture</a></li>
+                    <li><a href="#contribute">Get Involved</a></li>
+                    <li><a href="#djuma">Djuma Cam</a></li>
+                </ul>
+                <a href="#" class="close">Close</a>
+            </div>
+        </nav>
+
+        <!-- Banner -->
+        <section id="banner">
+            <div class="inner">
+                <img src="images/logo.png" alt="OpenXeroth Logo" style="max-width: 150px;"><h2>OpenXeroth</h2>
+                <p>Real-Time Conservation AI</p>
+                <ul class="actions special">
+                    <li><a href="https://github.com/OpenXeroth" class="button primary">Explore on GitHub</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section id="about" class="wrapper style1">
+            <div class="inner">
+                <h2>What is Hosana?</h2>
+                <img src="images/hosana.png" alt="Hosana the Leopard" style="max-width: 200px; background-color: #BCC2C6; padding: 1em; border-radius: 8px; margin-bottom: 1em;"><p>Hosana is OpenXeroth’s first open-source project: a real-time wildlife re-identification pipeline. Built for 24/7 video streams and drone feeds, it leverages state-of-the-art detection and transformer-based re-ID to track individual animals and trigger conservation action.</p>
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section id="architecture" class="wrapper style2">
+            <div class="inner">
+                <h2>Pipeline Architecture</h2>
+                <p>Hosana processes live video in real time using YOLOv8 detection, object tracking, species classification, and Vision Transformer-based re-identification, with a feedback loop via Slack.</p>
+                <pre>
+<!-- Mermaid placeholder -->
+graph LR
+    cam[Camera Stream] --> detect[YOLOv8 Detector]
+    detect --> track[Tracking]
+    track --> classify[Species Classifier]
+    classify --> reid[Transformer Re-ID]
+    reid --> feedback[Slack Feedback]
+                </pre>
+            </div>
+        </section>
+
+        <!-- Get Involved -->
+        <section id="contribute" class="wrapper style3">
+            <div class="inner">
+                <h2>Join the Mission</h2>
+                <p>OpenXeroth is community-powered. Whether you're an engineer, conservationist, or volunteer, you can contribute to Hosana. Improve the pipeline, validate re-IDs, or help design integrations with platforms like Wildbook and Zooniverse.</p>
+                <ul class="actions">
+                    <li><a href="https://github.com/OpenXeroth" class="button primary">Contribute on GitHub</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Djuma Cam -->
+        <section id="djuma" class="wrapper style1">
+            <div class="inner">
+                <h2>Live Now: Djuma Cam</h2>
+                <p>Hosana is currently being tested on the Djuma 24/7 wildlife livestream. Watch the stream and see real-time alerts from the system in action.</p>
+                <div class="video-container">
+                    <iframe width="100%" height="400" src="https://www.youtube.com/embed/live_stream?channel=UCAwe4zjQuqzJxW9lSRdUHBQ" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <section id="footer">
+            <div class="inner">
+                <ul class="copyright">
+                    <li>&copy; OpenXeroth</li>
+                    <li><a href="https://xeroth.ai">Xeroth.ai</a></li>
+                    <li><a href="https://github.com/OpenXeroth">GitHub</a></li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
 </body>
 </html>
