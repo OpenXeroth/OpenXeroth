@@ -12,6 +12,5 @@ jobs:
       - name: Install deps & run tests
         run: |
           pip install pytest kafka-python psycopg2-binary
-          # Adjust PYTHONPATH if tests are not directly runnable from root
-          # export PYTHONPATH=${PYTHONPATH}:. 
+          export PYTHONPATH=${PYTHONPATH}:. # Ensure pipeline package is discoverable
           pytest --maxfail=1 --disable-warnings -q tests/
