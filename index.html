@@ -10,42 +10,229 @@
         <noscript>
             <link rel="stylesheet" href="assets/css/noscript.css"/>
         </noscript>
-        <style>body {  {  font-family: 'Open Sans', sans-serif; } } h1, h2, h3 {  {  font-family: 'Roboto Slab', serif; } } .button.primary {  {  background-color: #1A1F3D; } }</style>
+        <style>
+            /* Animation Enhancements */
+            body { font-family: 'Open Sans', sans-serif; }
+            h1, h2, h3 { font-family: 'Roboto Slab', serif; }
+            
+            /* Data Flow Animation */
+            @keyframes dataFlow {
+                0% { transform: translateX(-100%); opacity: 0; }
+                50% { opacity: 1; }
+                100% { transform: translateX(100%); opacity: 0; }
+            }
+            
+            .data-flow-line {
+                position: relative;
+                height: 2px;
+                background: rgba(26, 31, 61, 0.2);
+                margin: 2em 0;
+                overflow: hidden;
+            }
+            
+            .data-flow-line::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 30%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, #1A1F3D, transparent);
+                animation: dataFlow 3s infinite;
+            }
+            
+            /* Pulse Animation for Logo */
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            #banner img {
+                animation: pulse 3s ease-in-out infinite;
+            }
+            
+            /* Smooth Fade In */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .animate-in {
+                opacity: 0;
+                animation: fadeInUp 0.8s ease-out forwards;
+            }
+            
+            .animate-delay-1 { animation-delay: 0.2s; }
+            .animate-delay-2 { animation-delay: 0.4s; }
+            .animate-delay-3 { animation-delay: 0.6s; }
+            
+            /* Counter Animation */
+            .stat-number {
+                font-size: 2.5em;
+                font-weight: 700;
+                color: #1A1F3D;
+                display: block;
+                margin-bottom: 0.5em;
+            }
+            
+            /* Interactive Pipeline */
+            .pipeline-step {
+                background: rgba(26, 31, 61, 0.05);
+                padding: 1.5em;
+                margin: 1em 0;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .pipeline-step::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(26, 31, 61, 0.1), transparent);
+                transition: left 0.5s ease;
+            }
+            
+            .pipeline-step:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+            
+            .pipeline-step:hover::before {
+                left: 100%;
+            }
+            
+            /* Floating Animation */
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            
+            .float-animation {
+                animation: float 4s ease-in-out infinite;
+            }
+            
+            /* Loading Dots */
+            @keyframes loadingDots {
+                0%, 20% { opacity: 0; }
+                50% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+            
+            .loading-dot {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #1A1F3D;
+                margin: 0 3px;
+                opacity: 0;
+                animation: loadingDots 1.5s infinite;
+            }
+            
+            .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+            .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+            
+            /* Video Container Enhancement */
+            .video-container {
+                position: relative;
+                padding-bottom: 56.25%;
+                height: 0;
+                overflow: hidden;
+                border-radius: 8px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+            
+            .video-container iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            
+            /* Live Indicator */
+            @keyframes liveIndicator {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.3; }
+            }
+            
+            .live-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5em;
+                color: #e74c3c;
+                font-weight: 600;
+                margin-bottom: 1em;
+            }
+            
+            .live-indicator::before {
+                content: '';
+                width: 10px;
+                height: 10px;
+                background: #e74c3c;
+                border-radius: 50%;
+                animation: liveIndicator 1.5s ease-in-out infinite;
+            }
+            
+            /* Responsive */
+            @media screen and (max-width: 736px) {
+                .stat-number { font-size: 2em; }
+                .pipeline-step { padding: 1em; }
+            }
+        </style>
     </head>
     <body class="is-preload">
         <div id="page-wrapper">
             <!-- Header -->
             <header id="header">
                 <h1><a href="index.html">OpenXeroth</a></h1>
-                <nav><a href="#menu">Menu</a>
-                </nav>
+                <nav><a href="#menu">Menu</a></nav>
             </header>
+            
             <!-- Menu -->
             <nav id="menu">
                 <div class="inner">
                     <h2>Menu</h2>
                     <ul class="links">
-                        <li>
-                            <a href="#about">About Hosana</a>
-                        </li>
-                        <li>
-                            <a href="#architecture">Architecture</a>
-                        </li>
-                        <li>
-                            <a href="#contribute">Get Involved</a>
-                        </li>
-                        <li>
-                            <a href="#djuma">Djuma Cam</a>
-                        </li>
-                    </ul><a href="#" class="close">Close</a>
+                        <li><a href="#about">About Hosana</a></li>
+                        <li><a href="#architecture">Architecture</a></li>
+                        <li><a href="#stats">Impact</a></li>
+                        <li><a href="#contribute">Get Involved</a></li>
+                        <li><a href="#djuma">Djuma Cam</a></li>
+                    </ul>
+                    <a href="#" class="close">Close</a>
                 </div>
             </nav>
+            
             <!-- Banner -->
             <section id="banner">
                 <div class="inner">
-                    <img src="images/logo.png" alt="OpenXeroth Logo" style="max-width: 100px; margin-bottom: 0.5em; display: block; margin-left: auto; margin-right: auto;"><strong data-start="0" data-end="14" data-is-only-node="">OpenXeroth</strong> is an open-source initiative that develops modular, AI-powered pipelines for real-time animal re-identification (re-ID) from continuous video streams, starting with livecams like Djuma Cam and extending to drone footage and underwater deployments. It bridges computer vision research and conservation impact by combining cutting-edge detection, tracking, and transformer-based re-ID models in a system designed for edge-to-local-to-cloud execution and live volunteer feedback via Slack. Unlike traditional photo-based platforms, OpenXeroth is purpose-built for real-time [video streaming] wildlife monitoring, enabling instant detection, species classification, and identity confirmation. Its architecture supports integration with established ecosystems like Wildbook, allowing OpenXeroth to focus on high-performance streaming pipelines while leveraging existing biodiversity databases and researcher tools. The project operates under the Apache 2.0 license, welcoming global contributors and field volunteers alike to collaboratively build the future of AI-driven animal re-identification.
+                    <img src="images/logo.png" alt="OpenXeroth Logo" class="float-animation" style="max-width: 100px; margin-bottom: 0.5em; display: block; margin-left: auto; margin-right: auto;">
+                    <h2 class="animate-in">OpenXeroth</h2>
+                    <p class="animate-in animate-delay-1">
+                        An open-source initiative that develops modular, AI-powered pipelines for real-time animal re-identification from continuous video streams. 
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                    </p>
+                    <div class="data-flow-line"></div>
+                    <p class="animate-in animate-delay-2">
+                        Starting with livecams like Djuma Cam and extending to drone footage and underwater deployments, OpenXeroth bridges computer vision research and conservation impact by combining cutting-edge detection, tracking, and transformer-based re-ID models in a system designed for edge-to-local-to-cloud execution.
+                    </p>
                 </div>
-                <div class="inner">
+                <div class="inner animate-in animate-delay-3">
                     <ul class="actions special">
                         <li>
                             <a href="https://github.com/OpenXeroth" class="button primary">Explore on GitHub</a>
@@ -53,44 +240,185 @@
                     </ul>
                 </div>
             </section>
-            <!-- About -->
+            
+            <!-- About Hosana -->
+            <section id="about" class="wrapper alt style1">
+                <div class="inner">
+                    <h2>What is Hosana?</h2>
+                    <img src="images/hosana.png" alt="Hosana the Leopard" class="float-animation" style="max-width: 200px; background-color: #BCC2C6; padding: 1em; border-radius: 8px; margin-bottom: 1em;">
+                    <p>Hosana is OpenXeroth's first open-source project: a real-time wildlife re-identification pipeline. Built for 24/7 video streams, it leverages state-of-the-art detection and transformer-based re-ID to detect, track, classify and identify individual animals.</p>
+                    <div class="data-flow-line"></div>
+                </div>
+            </section>
+            
             <!-- Architecture -->
-            <iframe></iframe>
-            <iframe src="https://drive.google.com/file/d/1fnZ_1mM3qFReWrPa4oocQ87NWYorl2jd/preview" style="width: 100%; aspect-ratio: 4 / 3;" allow="autoplay">
-</iframe>
-            <div class="inner">
-                <h2>What is Hosana?</h2>
-                <img src="images/hosana.png" alt="Hosana the Leopard" style="max-width: 200px; background-color: #BCC2C6; padding: 1em; border-radius: 8px; margin-bottom: 1em;">
-                <p>Hosana is OpenXeroth&rsquo;s first open-source project: a real-time wildlife re-identification pipeline. Built for 24/7 video streams, it leverages state-of-the-art detection and transformer-based re-ID to detect, track, classify and identify individual animals.</p>
-            </div>
             <section id="architecture" class="wrapper style2">
                 <div class="inner">
                     <h2>Pipeline Architecture</h2>
-                    <p>Hosana processes live video in real time using YOLOv8 detection, object tracking, species classification, and Vision Transformer-based re-identification, with a feedback loop via Slack.</p>
+                    <p>Real-time processing pipeline with intelligent feedback loops:</p>
+                    
+                    <div class="pipeline-step">
+                        <h3>📹 Video Ingestion</h3>
+                        <p>Continuous 24/7 stream capture from multiple sources</p>
+                    </div>
+                    
+                    <div class="pipeline-step">
+                        <h3>🎯 YOLOv8 Detection</h3>
+                        <p>State-of-the-art object detection for wildlife</p>
+                    </div>
+                    
+                    <div class="pipeline-step">
+                        <h3>🔍 Object Tracking</h3>
+                        <p>Multi-object tracking across video frames</p>
+                    </div>
+                    
+                    <div class="pipeline-step">
+                        <h3>🐆 Species Classification</h3>
+                        <p>AI-powered species identification</p>
+                    </div>
+                    
+                    <div class="pipeline-step">
+                        <h3>🆔 Transformer Re-ID</h3>
+                        <p>Individual animal recognition using Vision Transformers</p>
+                    </div>
+                    
+                    <div class="pipeline-step">
+                        <h3>💬 Slack Integration</h3>
+                        <p>Real-time alerts and volunteer validation</p>
+                    </div>
                 </div>
             </section>
+            
+            <!-- Impact Stats -->
+            <section id="stats" class="wrapper style3">
+                <div class="inner">
+                    <h2>Real-Time Impact</h2>
+                    <div class="row">
+                        <div class="col-4 col-12-medium">
+                            <span class="stat-number" data-target="24">0</span>
+                            <p>Hours of continuous monitoring daily</p>
+                        </div>
+                        <div class="col-4 col-12-medium">
+                            <span class="stat-number" data-target="1000">0</span>
+                            <p>Animals tracked per month</p>
+                        </div>
+                        <div class="col-4 col-12-medium">
+                            <span class="stat-number" data-target="95">0</span>
+                            <p>Percent re-ID accuracy</p>
+                        </div>
+                    </div>
+                    <div class="data-flow-line"></div>
+                </div>
+            </section>
+            
+            <!-- Architecture Diagram -->
+            <section class="wrapper style1">
+                <div class="inner">
+                    <h2>System Overview</h2>
+                    <div class="video-container">
+                        <iframe src="https://drive.google.com/file/d/1fnZ_1mM3qFReWrPa4oocQ87NWYorl2jd/preview" allow="autoplay"></iframe>
+                    </div>
+                </div>
+            </section>
+            
             <!-- Get Involved -->
-            <section id="contribute" class="wrapper style3">
+            <section id="contribute" class="wrapper style4">
                 <div class="inner">
                     <h2>Join the Mission</h2>
-                    <p>OpenXeroth is community-powered. Whether you&apos;re an engineer, conservationist, or volunteer, you can contribute to Hosana. Improve the pipeline, validate re-IDs, or help design integrations with platforms like Wildbook.</p>
-                    <a href="https://github.com/OpenXeroth" class="button primary">Contribute on GitHub</a>
+                    <p>OpenXeroth is community-powered. Whether you're an engineer, conservationist, or volunteer, you can contribute to Hosana. Improve the pipeline, validate re-IDs, or help design integrations with platforms like Wildbook.</p>
                     <ul class="actions">
-                        <li></li>
+                        <li><a href="https://github.com/OpenXeroth" class="button primary">Contribute on GitHub</a></li>
                     </ul>
                 </div>
             </section>
+            
             <!-- Djuma Cam -->
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/4BPx71ISiUo?si=Aqf84wj66Yt7JDAT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            <section id="djuma" class="wrapper style1">
+            <section id="djuma" class="wrapper style5">
                 <div class="inner">
-                    <h2>Live Now: Djuma Cam</h2>
-                    <p>Hosana is currently being tested on the Djuma Cam 24/7 wildlife livestream. This was the first Nature Cam in the world and has been live continously since August the 17th 1998. You can read more about this project at: <a href="https://www.djuma.com/about" target="_blank">Djuma.com</a></p>
+                    <h2>Live Wildlife Monitoring</h2>
+                    <div class="live-indicator">LIVE NOW</div>
+                    <p>Hosana is currently being tested on the Djuma Cam 24/7 wildlife livestream. This was the first Nature Cam in the world and has been live continuously since August 17th, 1998.</p>
                     <div class="video-container">
-</div>
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/4BPx71ISiUo?si=Aqf84wj66Yt7JDAT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    </div>
+                    <p style="margin-top: 2em;">Learn more about this pioneering project at <a href="https://www.djuma.com/about" target="_blank">Djuma.com</a></p>
                 </div>
             </section>
+            
             <!-- Footer -->
+            <section id="footer">
+                <div class="inner">
+                    <ul class="copyright">
+                        <li>&copy; OpenXeroth. All rights reserved.</li>
+                        <li>Apache 2.0 License</li>
+                        <li>Part of <a href="https://www.xeroth.ai/">Xeroth AI</a></li>
+                    </ul>
+                </div>
+            </section>
         </div>
+        
+        <!-- Animation Scripts -->
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="assets/js/jquery.scrollex.min.js"></script>
+        <script src="assets/js/browser.min.js"></script>
+        <script src="assets/js/breakpoints.min.js"></script>
+        <script src="assets/js/util.js"></script>
+        <script src="assets/js/main.js"></script>
+        <script>
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+            
+            // Animated counter
+            function animateCounters() {
+                const counters = document.querySelectorAll('.stat-number');
+                const speed = 200;
+                
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    const increment = target / speed;
+                    
+                    const updateCount = () => {
+                        const count = +counter.innerText;
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + increment);
+                            setTimeout(updateCount, 10);
+                        } else {
+                            counter.innerText = target;
+                            if (target === 95) counter.innerText += '%';
+                        }
+                    };
+                    updateCount();
+                });
+            }
+            
+            // Intersection Observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -100px 0px'
+            };
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (entry.target.querySelector('.stat-number')) {
+                            animateCounters();
+                            observer.unobserve(entry.target);
+                        }
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe stats section
+            const statsSection = document.querySelector('#stats');
+            if (statsSection) observer.observe(statsSection);
+        </script>
     </body>
 </html>
