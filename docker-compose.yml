@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on: [zookeeper]
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: openxeroth
+      POSTGRES_USER: ox
+      POSTGRES_PASSWORD: oxpass
+    ports: ["5432:5432"]
+  detection:
+    build: ./pipeline/services/detection
+    depends_on: [kafka]
+  tracking:
+    build: ./pipeline/services/tracking
+    depends_on: [kafka]
+  reid:
+    build: ./pipeline/services/reid
+    depends_on: [kafka, postgres]
