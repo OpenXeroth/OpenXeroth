@@ -4,9 +4,9 @@ jobs:
   build:
     runs-on: [self-hosted, tingana]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x' # Use a general 3.x version
       - name: Install deps & run tests
