@@ -150,7 +150,7 @@ content.addEventListener('click',e=>{
 content.addEventListener('error',e=>{
   if(e.target.matches('img.species-photo')) {e.target.hidden=true;const figure=e.target.closest('figure');if(!figure.querySelector('.image-error')){const note=document.createElement('span');note.className='image-error fine';note.textContent='Photograph unavailable — view its Wikimedia source below.';figure.prepend(note);}}
   else if(e.target.matches('.spectrogram-preview img')){e.target.hidden=true;e.target.nextElementSibling.textContent='Spectrogram unavailable';}
-  else if(e.target.matches('audio,.spectrogram')){const note=document.querySelector('#media-error');if(note)note.textContent='This recording is temporarily unavailable or has expired. Its detection record remains available.';}
+  else if(e.target.matches('audio,.spectrogram')){if(e.target.matches('img'))e.target.hidden=true;const note=document.querySelector('#media-error');if(note)note.textContent='This recording is temporarily unavailable or has expired. Its detection record remains available.';}
 },true);
 
 async function load(initial = false) {
