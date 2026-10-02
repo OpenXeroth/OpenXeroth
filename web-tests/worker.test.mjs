@@ -45,3 +45,25 @@ test('historical call links verify station membership without publishing storage
  const old=globalThis.fetch;globalThis.fetch=async()=>Response.json({data:{...clip,audio_url:null,audio_available:false}});
  try{const r=await handle(new Request(`https://open.xeroth.ai/api/birds/call/${id}?access=${token}`),{PUBLIC_CALL_KEY:key},{waitUntil(){}},{match:async()=>null,put:async()=>{}});assert.equal(r.status,200);assert.equal((await r.json()).data.audio_available,false);}finally{globalThis.fetch=old;}
 });
+test('enabled audio streams through the site, preserves byte ranges and hides storage credentials',async()=>{
+ const old=globalThis.fetch,requests=[];
+ globalThis.fetch=async(url,options)=>{
+  requests.push({url,options});
+  if(requests.length===1)return Response.json({data:clip});
+  return new Response('RIFF',{status:206,headers:{'Content-Type':'audio/wav','Content-Length':'4','Content-Range':'bytes 0-3/100','Accept-Ranges':'bytes'}});
+ };
+ try{
+  const r=await handle(new Request(`https://open.xeroth.ai/api/birds/call/${id}/audio`,{headers:{Range:'bytes=0-3'}}),{PUBLIC_BIRD_MEDIA:'true'},{waitUntil(){}},{});
+  assert.equal(r.status,206);assert.equal(await r.text(),'RIFF');assert.equal(r.headers.get('Content-Range'),'bytes 0-3/100');assert.equal(requests[1].options.headers.Range,'bytes=0-3');assert.equal(requests[1].options.redirect,'manual');assert.ok(!JSON.stringify([...r.headers]).includes('Signature'));
+ }finally{globalThis.fetch=old;}
+});
+test('enabled spectrogram is served as an image and upstream redirects are not followed',async()=>{
+ const old=globalThis.fetch;let redirected=false;
+ const d={...clip,spectrogram_available:true,spectrogram_url:`https://storage.googleapis.com/hosana-birdnet-media/birdnet/${id}-spectrogram.jpg`};
+ globalThis.fetch=async url=>url.includes('api.birdnetcloud.com')?Response.json({data:d}):redirected?new Response(null,{status:302,headers:{Location:'https://elsewhere.test'}}):new Response('image',{headers:{'Content-Type':'image/jpeg'}});
+ try{
+  const req=new Request(`https://open.xeroth.ai/api/birds/call/${id}/spectrogram`),env={PUBLIC_BIRD_MEDIA:'true'};
+  const r=await handle(req,env,{waitUntil(){}},{});assert.equal(r.status,200);assert.equal(r.headers.get('Content-Type'),'image/jpeg');assert.equal(await r.text(),'image');
+  redirected=true;assert.equal((await handle(req,env,{waitUntil(){}},{})).status,404);
+ }finally{globalThis.fetch=old;}
+});
