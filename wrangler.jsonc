@@ -1,0 +1,10 @@
+{
+  "name": "xeroth-open",
+  "account_id": "8a8bd875d2d1ec4ebba454349b2c5a86",
+  "main": "entry.mjs",
+  "compatibility_date": "2026-05-01",
+  "assets": {"directory": "./site", "binding": "ASSETS", "run_worker_first": ["/api/*"]},
+  "routes": [{"pattern": "open.xeroth.ai", "custom_domain": true}],
+  "vars": {"PUBLIC_BIRD_MEDIA": "false"},
+  "observability": {"enabled": true}
+}
