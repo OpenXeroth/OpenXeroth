@@ -29,7 +29,7 @@ Public routes: `/djuma-birds/`, `/djuma-birds/species/?name=COMMON_NAME`, `/djum
 
 `PUBLIC_BIRD_MEDIA` defaults to `false` pending confirmation that Djuma's BirdNET-Cloud audio and spectrograms may be republished publicly. When authorised, set it to `true` and redeploy. Media is then fetched server-side from the exact Djuma bucket/object namespace, with no redirects; callers cannot specify a destination URL. Unavailable/expired media does not remove the detection record. No bucket-wide public permissions are required.
 
-Species pages use the provider's common-name filter. Call membership is checked against the Djuma media namespace; historical calls with only legacy provider media cannot be verified this way and return an explicit unavailable response. A future lakehouse adapter can add verified station membership without making the bucket public.
+Species pages use the provider's common-name filter. Call membership is checked against the Djuma media namespace or a signed call link issued from this station’s detection feed. `PUBLIC_CALL_KEY` is a random HMAC signing secret stored only in Cloudflare, never in Git. These public call links allow historical metadata to remain accessible even when its recording is unavailable. Rotating the key invalidates older historical call links; re-open the call from its species feed to obtain a current link. Media remains separately permission-gated.
 
 ## Research
 

@@ -46,7 +46,19 @@ export function route(url) {
   }
   const m = resource.match(/^call\/([^/]+)(?:\/(audio|spectrogram))?$/);
   if (!m || !UUID.test(m[1])) throw new Error('Invalid detection');
-  return {kind:m[2] || 'call',id:m[1].toLowerCase(),upstream:`/detections/${m[1].toLowerCase()}`,key:`call/${m[1].toLowerCase()}`};
+  return {kind:m[2] || 'call',id:m[1].toLowerCase(),upstream:`/detections/${m[1].toLowerCase()}`,key:`call/${m[1].toLowerCase()}?access=${/^[a-f0-9]{64}$/.test(url.searchParams.get('access')||'')?url.searchParams.get('access'):''}`};
+}
+export async function callAccess(id, secret) {
+  if (!secret) return '';
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  const bytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(id));
+  return [...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+export async function hasCallAccess(id, token, secret) {
+  if (!secret || !/^[a-f0-9]{64}$/.test(token || '')) return false;
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['verify']);
+  const bytes = Uint8Array.from(token.match(/../g), h=>parseInt(h,16));
+  return crypto.subtle.verify('HMAC', key, bytes, new TextEncoder().encode(id));
 }
 async function upstream(path) {
   const r = await fetch(BASE+path.replace(/^\//,''),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(12000),redirect:'manual'});
@@ -55,13 +67,14 @@ async function upstream(path) {
   if (data.success === false || !data.data) throw new Error('upstream-format');
   return data;
 }
-function cleanPayload(p, spec, media) {
+async function cleanPayload(p, spec, media, secret) {
   let data;
   if (spec.kind === 'detections') data = p.data.map(d=>cleanDetection(d,media));
   else if (spec.kind === 'call') data = cleanDetection(p.data,media);
   else if (spec.kind === 'station') data = pick(p.data,['name','timezone','species_count','detection_count','first_detection','last_detection']);
   else if (spec.kind === 'stats') data = pick(p.data,['total_detections','total_species','detections_today','species_today','busiest_hour','hourly_activity','daily_activity','timezone']);
   else data = p.data.map(d=>({...pick(d,['kind','detection_count','max_confidence','avg_confidence','first_heard','last_heard']),species:pick(d.species,['common_name','scientific_name','id','ebird_code'])}));
+  if (spec.kind === 'detections' && secret) await Promise.all(data.map(async d=>{d.access=await callAccess(d.id,secret);}));
   return {data,meta:{...pick(p.meta,['total','page','per_page','total_pages','generated_at','has_more']),fetched_at:new Date().toISOString(),source:'BirdNET-Cloud',station:STATION,media_public:media}};
 }
 export async function handle(request, env, ctx, cache) {
@@ -70,7 +83,7 @@ export async function handle(request, env, ctx, cache) {
   if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
   let spec;try{spec=route(url);}catch{return json({error:'Unknown endpoint or invalid parameters'},400);}
   const media = env.PUBLIC_BIRD_MEDIA === 'true';
-  const key = new Request(`${url.origin}/api-cache-v1/${media}/${spec.key}`);
+  const key = new Request(`${url.origin}/api-cache-v2/${media}/${spec.key}`);
   if (spec.kind === 'audio' || spec.kind === 'spectrogram') {
     if (!media) return json({error:'This recording is not published here.'},404);
     try {
@@ -93,8 +106,8 @@ export async function handle(request, env, ctx, cache) {
     const p=await upstream(spec.upstream);
     // Current station media has a bucket/object namespace unique to Djuma.
     // Never expose an arbitrary station's detection through this endpoint.
-    if(spec.kind==='call' && !mediaURL(p.data.audio_url,spec.id,'audio') && !mediaURL(p.data.spectrogram_url,spec.id,'spectrogram')) throw new Error('wrong-station');
-    return cleanPayload(p,spec,media);
+    if(spec.kind==='call' && !await hasCallAccess(spec.id,url.searchParams.get('access'),env.PUBLIC_CALL_KEY) && !mediaURL(p.data.audio_url,spec.id,'audio') && !mediaURL(p.data.spectrogram_url,spec.id,'spectrogram')) throw new Error('wrong-station');
+    return cleanPayload(p,spec,media,env.PUBLIC_CALL_KEY);
   })().finally(()=>pending.delete(key.url)));
   try{
     const result=await pending.get(key.url);

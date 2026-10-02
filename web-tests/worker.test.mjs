@@ -35,3 +35,13 @@ test('another station detection is rejected',async()=>{
  const old=globalThis.fetch;globalThis.fetch=async()=>Response.json({data:{...clip,audio_url:'https://elsewhere.test/audio'}});
  try{const r=await handle(new Request(`https://open.xeroth.ai/api/birds/call/${id}`),{},{waitUntil(){}},{match:async()=>null});assert.equal(r.status,404);}finally{globalThis.fetch=old;}
 });
+test('historical call links verify station membership without publishing storage URLs',async()=>{
+ const {callAccess,hasCallAccess}=await import('../worker.mjs');
+ const key='synthetic-test-key',token=await callAccess(id,key);
+ assert.equal(await hasCallAccess(id,token,key),true);
+ assert.equal(await hasCallAccess(id,token+'0',key),false);
+ assert.equal(await hasCallAccess(id,token,'wrong-key'),false);
+ assert.equal(await hasCallAccess('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',token,key),false);
+ const old=globalThis.fetch;globalThis.fetch=async()=>Response.json({data:{...clip,audio_url:null,audio_available:false}});
+ try{const r=await handle(new Request(`https://open.xeroth.ai/api/birds/call/${id}?access=${token}`),{PUBLIC_CALL_KEY:key},{waitUntil(){}},{match:async()=>null,put:async()=>{}});assert.equal(r.status,200);assert.equal((await r.json()).data.audio_available,false);}finally{globalThis.fetch=old;}
+});
