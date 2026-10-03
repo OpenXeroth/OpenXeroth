@@ -1,3 +1,4 @@
+import {liveStream,refreshLiveStream} from './live-stream.mjs';
 import {enrichBirds,summarizeDay} from './bird-context.mjs';
 // A fixed-station, read-only public interface. No camera or JHB API is contacted.
 export const STATION = 'djuma-cam-b1610b';
@@ -147,7 +148,7 @@ export async function handle(request, env, ctx, cache) {
   if (!['GET','HEAD'].includes(request.method)) return json({error:'Read-only endpoint'},405);
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
-  if(url.pathname==='/api/naturecam/live')return liveStream(cache,ctx);
+  if(url.pathname==='/api/naturecam/live')return liveStream(env);
   let spec;try{spec=route(url);}catch{return json({error:'Unknown endpoint or invalid parameters'},400);}
   const media = env.PUBLIC_BIRD_MEDIA === 'true';
   const key = new Request(`${url.origin}/api-cache-v9/${media}/${spec.key}`);
@@ -206,18 +207,7 @@ export async function handle(request, env, ctx, cache) {
     const r=json(result,200,['histogram','daily'].includes(spec.kind)?300:60);ctx.waitUntil(cache.put(key,r.clone()));return r;
   }catch(e){console.warn('BirdNET request failed', e.message === 'wrong-station' ? 'station-check' : e.name);return json({error:e.message==='wrong-station'?'This call is not available in the Djuma public feed.':'BirdNET-Cloud is temporarily unavailable. Please try again shortly.'},e.message==='wrong-station'?404:503);}
 }
-export function extractLiveVideo(html) {
-  const id=html.match(/<link rel="canonical" href="https:\/\/www.youtube.com\/watch\?v=([\w-]{11})"/i)?.[1];
-  return id&&html.includes('"channelId":"UCWh93l9snW90iP2ybPHikAg"')&&html.includes('"isLiveNow":true')?id:null;
-}
-async function liveStream(cache,ctx) {
-  const key=new Request('https://open.xeroth.ai/live-video-v1');
-  const hit=await cache.match(key);if(hit)return hit;
-  try{
-    const r=await fetch('https://www.youtube.com/@djumacam/live',{headers:{'User-Agent':'Mozilla/5.0'},signal:AbortSignal.timeout(10000)});
-    const id=r.ok?extractLiveVideo(await r.text()):null;
-    const result=json({video_id:id,available:Boolean(id),channel_url:'https://www.youtube.com/@djumacam/streams'},200,300);
-    ctx.waitUntil(cache.put(key,result.clone()));return result;
-  }catch{return json({available:false,video_id:null,channel_url:'https://www.youtube.com/@djumacam/streams'},200,60);}
-}
-export default {fetch(request,env,ctx){return handle(request,env,ctx,caches.default);}};
+export default {
+  fetch(request,env,ctx){return handle(request,env,ctx,caches.default);},
+  scheduled(_event,env,ctx){ctx.waitUntil(refreshLiveStream(env));}
+};
