@@ -1,3 +1,4 @@
+import {enrichBirds,summarizeDay} from './bird-context.mjs';
 // A fixed-station, read-only public interface. No camera or JHB API is contacted.
 export const STATION = 'djuma-cam-b1610b';
 const BASE = 'https://api.birdnetcloud.com/api/v1/';
@@ -75,8 +76,17 @@ export function route(url) {
   const root = `/stations/${STATION}`;
   let resource = path.slice('/api/birds/'.length);
   if (!path.startsWith('/api/birds/')) throw new Error('Unknown endpoint');
-  if (['station','species','stats','detections','histogram'].includes(resource)) {
+  if (['station','species','stats','detections','histogram','daily'].includes(resource)) {
     const q = new URLSearchParams();
+    if(resource==='daily') {
+      const date=url.searchParams.get('date')||new Date(Date.now()+7200000).toISOString().slice(0,10);
+      const parsed=new Date(date+'T00:00:00+02:00'),minimum=url.searchParams.get('min_confidence')||'0.85';
+      if(!/^20\d{2}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsed.getTime())||new Date(parsed.getTime()+7200000).toISOString().slice(0,10)!==date||!['0','0.7','0.85','0.95'].includes(minimum))throw new Error('Invalid day');
+      const today=new Date(Date.now()+7200000).toISOString().slice(0,10);
+      if(date>today||date<'2026-08-01')throw new Error('Invalid day');
+      q.set('from',parsed.toISOString());q.set('to',new Date(parsed.getTime()+86400000).toISOString());q.set('min_confidence',minimum);q.set('include_filtered','true');q.set('sort','time_asc');q.set('per_page','1000');q.set('kind','bird');
+      return {kind:'daily',date,minimum:Number(minimum),upstream:`${root}/detections?${q}`,key:`daily/${date}/${minimum}`};
+    }
     if (resource === 'species') {
       const period = url.searchParams.get('period') || 'all';
       if (!['today','7d','30d','all'].includes(period)) throw new Error('Invalid period');
@@ -121,7 +131,7 @@ async function upstream(path) {
   if (data.success === false || !data.data) throw new Error('upstream-format');
   return data;
 }
-async function cleanPayload(p, spec, media, secret) {
+async function cleanPayload(p, spec, media, secret, cache, ctx) {
   let data;
   if (spec.kind === 'detections') data = p.data.map(d=>cleanDetection(d,media));
   else if (spec.kind === 'call') data = cleanDetection(p.data,media);
@@ -130,15 +140,17 @@ async function cleanPayload(p, spec, media, secret) {
   else if (spec.kind === 'stats') data = pick(p.data,['total_detections','total_species','detections_today','species_today','busiest_hour','hourly_activity','daily_activity','timezone']);
   else data = p.data.map(d=>({...cleanPhoto(d),...pick(d,['kind','detection_count','max_confidence','avg_confidence','first_heard','last_heard']),species:pick(d.species,['common_name','scientific_name','id','ebird_code'])}));
   if (spec.kind === 'detections' && secret) await Promise.all(data.map(async d=>{d.access=await callAccess(d.id,secret);}));
+  if(['detections','call','species'].includes(spec.kind))await enrichBirds(data,cache,ctx);
   return {data,meta:{...pick(p.meta,['total','page','per_page','total_pages','generated_at','has_more']),fetched_at:new Date().toISOString(),source:'BirdNET-Cloud',station:STATION,media_public:media}};
 }
 export async function handle(request, env, ctx, cache) {
   if (!['GET','HEAD'].includes(request.method)) return json({error:'Read-only endpoint'},405);
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+  if(url.pathname==='/api/naturecam/live')return liveStream(cache,ctx);
   let spec;try{spec=route(url);}catch{return json({error:'Unknown endpoint or invalid parameters'},400);}
   const media = env.PUBLIC_BIRD_MEDIA === 'true';
-  const key = new Request(`${url.origin}/api-cache-v4/${media}/${spec.key}`);
+  const key = new Request(`${url.origin}/api-cache-v9/${media}/${spec.key}`);
   if (spec.kind === 'audio' || spec.kind === 'spectrogram') {
     if (!media) return json({error:'This recording is not published here.'},404);
     try {
@@ -169,15 +181,43 @@ export async function handle(request, env, ctx, cache) {
   }
   const hit=await cache.match(key);if(hit)return hit;
   if (!pending.has(key.url)) pending.set(key.url,(async()=>{
+    if(spec.kind==='daily') {
+      const rows=[];let complete=false,total=null;
+      for(let page=1;page<=12;page++){
+        const p=await upstream(spec.upstream+'&page='+page);total=p.meta?.total??total;rows.push(...p.data);
+        if(p.data.length<1000||(typeof total==='number'&&rows.length>=total)){complete=true;break;}
+      }
+      const data=summarizeDay(rows,spec.date,spec.minimum);
+      const allGroups=[...data.groups,...data.other_sounds];
+      const examples=allGroups.map(g=>cleanDetection(g.representative,media));
+      await enrichBirds(examples,cache,ctx);
+      await Promise.all(examples.map(async d=>{if(env.PUBLIC_CALL_KEY)d.access=await callAccess(d.id,env.PUBLIC_CALL_KEY);}));
+      allGroups.forEach((g,i)=>{g.representative=examples[i];g.species=examples[i].species;});
+      return {data,meta:{complete,upstream_total:total,minimum:spec.minimum,fetched_at:new Date().toISOString(),station:STATION,source:'BirdNET-Cloud'}};
+    }
     const p=await upstream(spec.upstream);
     // Current station media has a bucket/object namespace unique to Djuma.
     // Never expose an arbitrary station's detection through this endpoint.
     if(spec.kind==='call' && !await hasCallAccess(spec.id,url.searchParams.get('access'),env.PUBLIC_CALL_KEY) && !mediaURL(p.data.audio_url,spec.id,'audio') && !mediaURL(p.data.spectrogram_url,spec.id,'spectrogram')) throw new Error('wrong-station');
-    return cleanPayload(p,spec,media,env.PUBLIC_CALL_KEY);
+    return cleanPayload(p,spec,media,env.PUBLIC_CALL_KEY,cache,ctx);
   })().finally(()=>pending.delete(key.url)));
   try{
     const result=await pending.get(key.url);
-    const r=json(result,200,spec.kind==='histogram'?300:60);ctx.waitUntil(cache.put(key,r.clone()));return r;
+    const r=json(result,200,['histogram','daily'].includes(spec.kind)?300:60);ctx.waitUntil(cache.put(key,r.clone()));return r;
   }catch(e){console.warn('BirdNET request failed', e.message === 'wrong-station' ? 'station-check' : e.name);return json({error:e.message==='wrong-station'?'This call is not available in the Djuma public feed.':'BirdNET-Cloud is temporarily unavailable. Please try again shortly.'},e.message==='wrong-station'?404:503);}
+}
+export function extractLiveVideo(html) {
+  const id=html.match(/<link rel="canonical" href="https:\/\/www.youtube.com\/watch\?v=([\w-]{11})"/i)?.[1];
+  return id&&html.includes('"channelId":"UCWh93l9snW90iP2ybPHikAg"')&&html.includes('"isLiveNow":true')?id:null;
+}
+async function liveStream(cache,ctx) {
+  const key=new Request('https://open.xeroth.ai/live-video-v1');
+  const hit=await cache.match(key);if(hit)return hit;
+  try{
+    const r=await fetch('https://www.youtube.com/@djumacam/live',{headers:{'User-Agent':'Mozilla/5.0'},signal:AbortSignal.timeout(10000)});
+    const id=r.ok?extractLiveVideo(await r.text()):null;
+    const result=json({video_id:id,available:Boolean(id),channel_url:'https://www.youtube.com/@djumacam/streams'},200,300);
+    ctx.waitUntil(cache.put(key,result.clone()));return result;
+  }catch{return json({available:false,video_id:null,channel_url:'https://www.youtube.com/@djumacam/streams'},200,60);}
 }
 export default {fetch(request,env,ctx){return handle(request,env,ctx,caches.default);}};
