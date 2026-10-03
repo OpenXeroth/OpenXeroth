@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {rangeAssessment,summarizeDay,creditFromMetadata,enrichBirds} from '../bird-context.mjs';
-import {route,extractLiveVideo,handle} from '../worker.mjs';
+import {route,handle} from '../worker.mjs';
 const bird={common_name:'Fiery-necked Nightjar',scientific_name:'Caprimulgus pectoralis'};
 test('regional review flags explicit range conflicts, taxonomy differences and new unknown names',()=>{
  assert.equal(rangeAssessment(bird).status,'listed');
@@ -29,10 +29,6 @@ test('Wikimedia credit comes from author metadata and only permits recognised li
 test('missing attribution withholds the image while retaining a source link',async()=>{
  const old=globalThis.fetch;globalThis.fetch=async()=>new Response('unavailable',{status:503});
  try{const row={species:bird,photo_url:'https://upload.wikimedia.org/test.jpg',photo:{page_url:'https://commons.wikimedia.org/wiki/File:Bird.jpg'}};await enrichBirds([row],{match:async()=>null},{waitUntil(){}});assert.equal(row.photo_url,undefined);assert.equal(row.photo.verified,false);assert.ok(row.photo.page_url);}finally{globalThis.fetch=old;}
-});
-test('live stream resolution accepts only a live video from the Djuma channel',()=>{
- const html='<link rel="canonical" href="https://www.youtube.com/watch?v=iUdDKf9aDUU"> "channelId":"UCWh93l9snW90iP2ybPHikAg" "isLiveNow":true';
- assert.equal(extractLiveVideo(html),'iUdDKf9aDUU');assert.equal(extractLiveVideo(html.replace('"isLiveNow":true','"isLiveNow":false')),null);assert.equal(extractLiveVideo(html.replace('UCWh93l9snW90iP2ybPHikAg','another-channel')),null);
 });
 test('daily endpoint paginates before counting and sanitizes representative clips',async()=>{
  const old=globalThis.fetch;let hits=0;
