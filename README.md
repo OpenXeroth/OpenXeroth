@@ -37,7 +37,7 @@ Species pages use the provider's common-name filter. Call membership is checked 
 
 ## Research
 
-[Public research repository](https://github.com/OpenXeroth/acoustic-re-id-research). The current paper and separate supporting-information PDFs in `site/papers/` are corrected v8 author drafts. Archived error-rate verification and author declarations remain outstanding before preprint submission. The original v7 files remain available at their original URLs. It is not presented as a peer-reviewed journal publication. The source code release and scientific claims have separate reproducibility limitations documented in that repository.
+[Public research repository](https://github.com/OpenXeroth/acoustic-re-id-research). The current paper and separate supporting-information PDFs in `site/papers/` are corrected v8 author drafts. Archived verification and declarations are complete; final author approval precedes submission. The original v7 files remain available at their original URLs. It is not presented as a peer-reviewed journal publication. The source code release and scientific claims have separate reproducibility limitations documented in that repository.
 
 The supplied Xeroth logo and manuscript remain author-owned material. Djuma history is paraphrased from [Djuma's own account](https://www.djuma.com/djumacam). Third-party data and models retain their own terms. Existing legacy pipeline files are retained; they do not form part of the deployed website.
 
@@ -50,3 +50,5 @@ The default bird view groups detections by species within a selected SAST calend
 `data/sabi-sand-birds.json` records the dated regional checklist, explicit spelling/name mappings and separately sourced range conflicts. Every detection, daily group and archive species receives a review status. A checklist match is not confirmation of an identification; an unmatched name is not proof of geographic absence. Taxonomic differences remain explicit. The [catalogue review](docs/djuma-range-review.md) records all 130 species in the provider catalogue checked on 3 October 2026. A listening highlight is selected from checklist-matched, unflagged suggestions and described as a listening choice, never a confirmed rare sighting.
 
 Wikimedia Commons image metadata supplies each photograph's author, licence and licence link. Verified credits are cached for seven days. Images whose credits cannot be verified are withheld, while their Commons source link remains available. Neither checklist warnings nor image-credit lookups change the underlying recording archive or the research datasets.
+
+Software DOI: https://doi.org/10.5281/zenodo.23159972. Evidence DOI: https://doi.org/10.5281/zenodo.23159989. The 5 October 2026 v8 PDFs use CC BY-NC 4.0; software remains Apache-2.0.
