@@ -37,7 +37,7 @@ Species pages use the provider's common-name filter. Call membership is checked 
 
 ## Research
 
-[Public research repository](https://github.com/OpenXeroth/acoustic-re-id-research). The current paper and separate supporting-information PDFs in `site/papers/` are author-approved v10 submission versions. Archived verification, declarations and final editorial corrections are complete; bioRxiv submission and proof approval remain. The original v7 files remain available at their original URLs. It is not presented as a peer-reviewed journal publication. The source code release and scientific claims have separate reproducibility limitations documented in that repository.
+[Public research repository](https://github.com/OpenXeroth/acoustic-re-id-research). The paper is published as a [bioRxiv preprint, version 1](https://www.biorxiv.org/content/10.64898/2026.10.08.757537v1), DOI [10.64898/2026.10.08.757537](https://doi.org/10.64898/2026.10.08.757537). It has not been peer reviewed. The author-approved v10 manuscript and separate supporting-information PDFs remain available in `site/papers/`. The original v7 files remain available at their original URLs. It is not presented as a peer-reviewed journal publication. The source code release and scientific claims have separate reproducibility limitations documented in that repository.
 
 The supplied Xeroth logo and manuscript remain author-owned material. Djuma history is paraphrased from [Djuma's own account](https://www.djuma.com/djumacam). Third-party data and models retain their own terms. Existing legacy pipeline files are retained; they do not form part of the deployed website.
 
