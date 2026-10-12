@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rangeAssessment,summarizeDay,creditFromMetadata,enrichBirds} from '../bird-context.mjs';
-import {route,handle} from '../worker.mjs';
+import {rangeAssessment,summarizeDay,creditFromMetadata,enrichBirds,addDay,pickHighlight,HISTORY_KEY} from '../bird-context.mjs';
+import {route,handle,updateHistory} from '../worker.mjs';
 const bird={common_name:'Fiery-necked Nightjar',scientific_name:'Caprimulgus pectoralis'};
 test('regional review flags explicit range conflicts, taxonomy differences and new unknown names',()=>{
  assert.equal(rangeAssessment(bird).status,'listed');
@@ -44,4 +44,41 @@ test('repeated photographs share one bounded metadata request and one cache look
  const old=globalThis.fetch;let fetched=0,lookups=0,puts=0;
  globalThis.fetch=async(url,options)=>{fetched++;assert.equal(options.redirect,'manual');return Response.json({query:{pages:{1:{title:'File:Bird.jpg',imageinfo:[{extmetadata:{Artist:{value:'An Author'},LicenseShortName:{value:'CC BY 4.0'},LicenseUrl:{value:'https://creativecommons.org/licenses/by/4.0/'}}}]}}}});};
  try{const rows=Array.from({length:200},()=>({species:bird,photo_url:'https://upload.wikimedia.org/bird.jpg',photo:{page_url:'https://commons.wikimedia.org/wiki/File:Bird.jpg'}}));await enrichBirds(rows,{match:async()=>{lookups++;return null;},put:async()=>{puts++;}},{waitUntil(){}});assert.equal(fetched,1);assert.equal(lookups,1);assert.equal(puts,1);assert.ok(rows.every(r=>r.photo.verified));}finally{globalThis.fetch=old;}
+});
+test('the eBird range verdict separates wrong-continent suggestions from local birds missing from the 2019 checklist',()=>{
+ const osprey={scientific_name:'Pandion haliaetus',ebird_code:'osprey'},grosbeak={scientific_name:'Coccothraustes vespertinus',ebird_code:'evegro'};
+ assert.equal(rangeAssessment(osprey,{flagged:false,occurrence:.1354}).status,'regional');
+ assert.equal(rangeAssessment(osprey,{flagged:false,occurrence:.1354}).tier,'regional');
+ assert.match(rangeAssessment(osprey,{flagged:false,occurrence:.1354}).note,/13\.5%/);
+ assert.equal(rangeAssessment(grosbeak,{flagged:true,occurrence:.0006}).tier,'misidentification');
+ assert.match(rangeAssessment(grosbeak,{flagged:true,occurrence:.0006}).note,/under 0\.1%/);
+ assert.equal(rangeAssessment(bird,{flagged:true}).status,'listed_flagged');
+ assert.equal(rangeAssessment({scientific_name:'Pternistis hildebrandti'},{flagged:false}).tier,'misidentification');
+ assert.equal(rangeAssessment(bird,{flagged:false}).status,'listed');
+});
+test('daily summary groups by the range verdict and counts distinct species per hour',()=>{
+ const row=(id,species,passed,t='2026-10-03T08:00:00Z')=>({id,timestamp:t,confidence:.9,species,passed_range_filter:passed,range_occurrence:passed?.5:.0001});
+ const d=summarizeDay([row('a',bird,true),row('b',bird,true,'2026-10-03T08:30:00Z'),row('c',{common_name:'Evening Grosbeak',scientific_name:'Coccothraustes vespertinus'},false),row('d',{common_name:'Osprey',scientific_name:'Pandion haliaetus'},true,'2026-10-03T09:00:00Z')],'2026-10-03',.85);
+ assert.deepEqual(d.groups.map(g=>g.range_review.tier).sort(),['checklist','misidentification','regional']);
+ assert.equal(d.review_species,1);assert.equal(d.species_counts[10],2);assert.equal(d.species_counts[11],1);assert.equal(d.counts[10],3);
+});
+test('station history counts each recorded day once and the highlight favours the rarest checklist species',()=>{
+ let h=addDay(null,'2026-08-26',['caprimulgus pectoralis','vanellus coronatus']);
+ h=addDay(h,'2026-08-27',[]);h=addDay(h,'2026-08-28',['caprimulgus pectoralis']);h=addDay(h,'2026-08-28',['caprimulgus pectoralis']);
+ assert.equal(h.recorded_days,2);assert.equal(h.through,'2026-08-28');assert.equal(h.days['caprimulgus pectoralis'],2);assert.equal(h.days['vanellus coronatus'],1);
+ const g=(name,sci,max)=>({species:{common_name:name,scientific_name:sci},max_confidence:max,range_review:{status:'listed'},representative:{audio_available:true,photo:{verified:true}}});
+ const groups=[g('Fiery-necked Nightjar','Caprimulgus pectoralis',.99),g('Crowned Lapwing','Vanellus coronatus',.8)];
+ assert.deepEqual(pickHighlight(groups,h),{key:'Vanellus coronatus',reason:'rarest',days:1,recorded_days:2,since:'2026-08-26',through:'2026-08-28'});
+ assert.deepEqual(pickHighlight(groups,null),{key:'Caprimulgus pectoralis',reason:'score'});
+ assert.equal(pickHighlight([{...groups[0],range_review:{status:'regional'}}],h),null);
+});
+test('the scheduled history update adds complete past days and never the current day',async()=>{
+ const old=globalThis.fetch,store=new Map(),asked=[];
+ globalThis.fetch=async url=>{const u=new URL(url);asked.push(u.searchParams.get('from'));return Response.json({data:[{id:'x',timestamp:u.searchParams.get('from'),confidence:.9,species:bird}],meta:{total:1}});};
+ const env={LIVE_STATE:{get:async k=>store.has(k)?JSON.parse(store.get(k)):null,put:async(k,v)=>{store.set(k,v);}}};
+ try{
+  store.set(HISTORY_KEY,JSON.stringify({since:'2026-08-26',through:'2026-10-09',recorded_days:5,days:{}}));
+  const h=await updateHistory(env,Date.parse('2026-10-12T10:00:00Z'));
+  assert.equal(h.through,'2026-10-11');assert.equal(asked.length,2);assert.equal(h.recorded_days,7);assert.equal(h.days['caprimulgus pectoralis'],2);
+ }finally{globalThis.fetch=old;}
 });

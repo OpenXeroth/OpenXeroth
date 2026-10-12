@@ -4,6 +4,21 @@ Source: [Sabi Sand Wildtuin checklist, revised December 2019](https://sabisand.c
 
 An exact name or documented spelling/combination change establishes checklist membership only. Broad or split taxonomic labels require review. Absence from this dated checklist does not establish absence from the region. Only separately sourced range conflicts are labelled likely misidentifications. No detection is removed.
 
+## How the page flags geography (12 October 2026)
+
+The 2019 checklist lists 267 species, and the extracted list matches all 267 entries. It does not include several birds that occur in the Lowveld, including Osprey, African Jacana, Giant Kingfisher and Black Kite, so a checklist miss alone cannot separate a local bird from a misidentification.
+
+The page therefore uses BirdNET-Cloud's eBird range check, which every detection carries: the share of regional eBird checklists that report the species, and whether the call passed the station's range threshold. Across every recorded day from 26 August to 8 October 2026 (3,546 species-days):
+
+- no checklist species ever failed the range check;
+- no species had a mix of passing and failing calls on the same day;
+- Townsend's Solitaire and Red-browed Pardalote, two of the three separately sourced range conflicts, also failed it; Hildebrandt's Francolin passed it, so the separately sourced list continues to override the range check;
+- 43 species passed the range check but are not on the checklist. Most are plausible here; a few, such as House Crow and Red-cheeked Cordonbleu, are not, so passing the check is not confirmation either.
+
+A suggestion that fails the range check, or is a separately sourced range conflict, is shown as a likely misidentification. A checklist species is shown first. Anything else that passes the range check is shown separately as not on the 2019 checklist, with its eBird share.
+
+## Catalogue review (3 October 2026)
+
 | Model label | Scientific name | Regional check |
 |---|---|---|
 | African Barred Owlet | Glaucidium capense | On checklist (name mapping) |
