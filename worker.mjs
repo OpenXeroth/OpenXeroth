@@ -1,5 +1,4 @@
-import {liveStream,refreshLiveStream} from './live-stream.mjs';
-import {enrichBirds,summarizeDay} from './bird-context.mjs';
+import {enrichBirds,summarizeDay,HISTORY_KEY,HISTORY_START,daySpecies,addDay,pickHighlight} from './bird-context.mjs';
 // A fixed-station, read-only public interface. No camera or JHB API is contacted.
 export const STATION = 'djuma-cam-b1610b';
 const BASE = 'https://api.birdnetcloud.com/api/v1/';
@@ -125,6 +124,30 @@ export async function hasCallAccess(id, token, secret) {
   const bytes = Uint8Array.from(token.match(/../g), h=>parseInt(h,16));
   return crypto.subtle.verify('HMAC', key, bytes, new TextEncoder().encode(id));
 }
+async function dayRows(spec) {
+  const rows=[];let complete=false,total=null;
+  for(let page=1;page<=12;page++){
+    const p=await upstream(spec.upstream+'&page='+page);total=p.meta?.total??total;rows.push(...p.data);
+    if(p.data.length<1000||(typeof total==='number'&&rows.length>=total)){complete=true;break;}
+  }
+  return {rows,complete,total};
+}
+// Adds each completed station day (SAST) to the species history, a few days per run.
+export async function updateHistory(env, now=Date.now()) {
+  if(!env.LIVE_STATE)throw new Error('History storage is not configured');
+  let history=await env.LIVE_STATE.get(HISTORY_KEY,'json');
+  const yesterday=new Date(now+7200000-86400000).toISOString().slice(0,10);
+  for(let i=0;i<3;i++){
+    const next=history?.through?new Date(Date.parse(history.through+'T00:00:00Z')+86400000).toISOString().slice(0,10):HISTORY_START;
+    if(next>yesterday)break;
+    const spec=route(new URL(`https://open.xeroth.ai/api/birds/daily?date=${next}&min_confidence=0`));
+    const {rows,complete}=await dayRows(spec);
+    if(!complete)throw new Error('Incomplete day '+next);
+    history=addDay(history,next,daySpecies(rows));
+    await env.LIVE_STATE.put(HISTORY_KEY,JSON.stringify(history));
+  }
+  return history;
+}
 async function upstream(path) {
   const r = await fetch(BASE+path.replace(/^\//,''),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(12000),redirect:'manual'});
   if (!r.ok) throw new Error(`upstream-${r.status}`);
@@ -148,10 +171,9 @@ export async function handle(request, env, ctx, cache) {
   if (!['GET','HEAD'].includes(request.method)) return json({error:'Read-only endpoint'},405);
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
-  if(url.pathname==='/api/naturecam/live')return liveStream(env);
   let spec;try{spec=route(url);}catch{return json({error:'Unknown endpoint or invalid parameters'},400);}
   const media = env.PUBLIC_BIRD_MEDIA === 'true';
-  const key = new Request(`${url.origin}/api-cache-v9/${media}/${spec.key}`);
+  const key = new Request(`${url.origin}/api-cache-v10/${media}/${spec.key}`);
   if (spec.kind === 'audio' || spec.kind === 'spectrogram') {
     if (!media) return json({error:'This recording is not published here.'},404);
     try {
@@ -183,17 +205,15 @@ export async function handle(request, env, ctx, cache) {
   const hit=await cache.match(key);if(hit)return hit;
   if (!pending.has(key.url)) pending.set(key.url,(async()=>{
     if(spec.kind==='daily') {
-      const rows=[];let complete=false,total=null;
-      for(let page=1;page<=12;page++){
-        const p=await upstream(spec.upstream+'&page='+page);total=p.meta?.total??total;rows.push(...p.data);
-        if(p.data.length<1000||(typeof total==='number'&&rows.length>=total)){complete=true;break;}
-      }
+      const {rows,complete,total}=await dayRows(spec);
       const data=summarizeDay(rows,spec.date,spec.minimum);
       const allGroups=[...data.groups,...data.other_sounds];
       const examples=allGroups.map(g=>cleanDetection(g.representative,media));
       await enrichBirds(examples,cache,ctx);
       await Promise.all(examples.map(async d=>{if(env.PUBLIC_CALL_KEY)d.access=await callAccess(d.id,env.PUBLIC_CALL_KEY);}));
       allGroups.forEach((g,i)=>{g.representative=examples[i];g.species=examples[i].species;});
+      let history=null;try{history=await env.LIVE_STATE?.get(HISTORY_KEY,'json');}catch{/* Fall back to the highest-scoring checklist species. */}
+      data.highlight=pickHighlight(data.groups,history);
       return {data,meta:{complete,upstream_total:total,minimum:spec.minimum,fetched_at:new Date().toISOString(),station:STATION,source:'BirdNET-Cloud'}};
     }
     const p=await upstream(spec.upstream);
@@ -209,5 +229,5 @@ export async function handle(request, env, ctx, cache) {
 }
 export default {
   fetch(request,env,ctx){return handle(request,env,ctx,caches.default);},
-  scheduled(_event,env,ctx){ctx.waitUntil(refreshLiveStream(env));}
+  scheduled(_event,env,ctx){ctx.waitUntil(updateHistory(env));}
 };
