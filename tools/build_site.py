@@ -33,42 +33,49 @@ for path,mode,title,lead in [('/djuma-birds/','feed','Who’s calling at Djuma?'
     page(path,title,'Public BirdNET-Cloud species detections from Djuma Cam. Latest calls, species histories and individual detection records.',f'''<div id="birds-app" data-mode="{mode}"><div class="subhero"><div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/djuma-birds/">Djuma birds</a></div><div class="eyebrow">Djuma Cam × BirdNET-Cloud</div><h1 id="bird-title">{title}</h1><p class="lead" id="bird-lead">{lead}</p><div class="status" id="feed-status" role="status">Connecting to the detection feed…</div></div><div class="notice">These are automated species suggestions, not confirmed sightings or individual identities. Confidence is a model score, not the probability that a suggestion is correct. Times below are South African Standard Time (UTC+2).</div><div id="bird-content" aria-busy="true"><p class="loading">Loading the soundscape…</p></div></div><section class="section"><div class="prose"><h2>About these detections.</h2><p>One bird may produce many detections, and more than one bird may be present in a clip. Detection totals are not counts of animals. The feed refreshes every 60 seconds; upstream processing and interruptions can delay new records.</p><p><a href="https://birdnetcloud.com/s/djuma-cam-b1610b">Visit Djuma on BirdNET-Cloud ↗</a> · <a href="https://www.youtube.com/@djumacam">Watch Djuma Cam ↗</a></p><a class="link" href="/research/acoustic-re-id-research/">Why recognising individuals is harder ↗</a></div></section>''','Djuma birds',True)
 
 import re
-CONTENT = Path(__file__).resolve().parents[1] / 'content' / 'research'
+import json
+from datetime import date
+ARTICLES = Path(__file__).resolve().parents[1] / 'research' / 'articles'
 
-# Newest first. Each entry is one research page; its card on /research/ is built from this list.
-RESEARCH = [
-    {'path': '/research/what-biological-ai-models-actually-learn/', 'kind': 'Article',
-     'title': 'What biological AI models actually learn',
-     'summary': 'Across bioacoustics, ecology, plant science, neuroscience, medicine and chemistry, models reported as near-perfect have repeatedly been recognising where, when and with what a measurement was taken, rather than the organism. The evidence field by field, from the primary sources, and five checks that expose it.',
-     'source': 'what-biological-ai-models-actually-learn.md'},
-    {'path': '/research/acoustic-re-id-research/', 'kind': 'Paper · bioRxiv preprint, not peer reviewed',
+
+def long_date(iso):
+    d = date.fromisoformat(iso)
+    return f'{d.day} {d:%B %Y}'
+
+
+def read_article(folder):
+    """research/articles/<slug>/article.md: front matter, then '# Title', then the lead paragraph and the body."""
+    text = (folder / 'article.md').read_text()
+    head, body = text.split('\n---\n', 1)
+    meta = dict(line.split(': ', 1) for line in head.removeprefix('---\n').splitlines())
+    body = body.lstrip('\n')
+    assert body.startswith(f"# {meta['title']}\n"), folder
+    lead, rest = body.split('\n', 1)[1].lstrip('\n').split('\n\n', 1)
+    chart = folder / 'chart.json'
+    return {**meta, 'kind': 'Article', 'path': f'/research/{folder.name}/', 'lead': lead, 'body': rest,
+            'chart': json.loads(chart.read_text()) if chart.exists() else None}
+
+
+# Papers have hand-written guide pages above. Articles are every folder in research/articles/.
+PAPERS = [
+    {'path': '/research/acoustic-re-id-research/', 'kind': 'Paper · bioRxiv preprint, not peer reviewed', 'date': '2026-10-09',
      'title': 'Can AI be used to identify individual animals accurately?',
      'summary': 'How recording conditions and the way recordings are divided for testing inflate the accuracy of AI that recognises individual animals from their calls, tested across nine species and 13 datasets. Plain-English guide, paper, code and evidence.'},
 ]
-
-# Same model under a test that shares recording context with training, and under one that does not.
-# Every value is taken from the paper named in the row; the article cites each one.
-CHART_ROWS = [
-    ('EEG, 40 object classes', 'Spampinato et al. 2017; Li et al. 2021', 82.9, 2.9, 2.5),
-    ('EEG recorded from watermelons, 4 classes', 'Xu et al. 2024', 88.7, 24.7, 25.0),
-    ('Leaf disease, 38 classes', 'Mohanty et al. 2016', 99.35, 31.4, 2.6),
-    ('Camera-trap species, new camera locations', 'Beery et al. 2018', 80.9, 59.0, None),
-    ('Camera-trap species, 36 locations', 'Schneider et al. 2020', 95.6, 68.7, None),
-    ('Sea turtle re-identification, 438 turtles', 'Adam et al. 2024', 83.2, 47.6, None),
-]
-CHART_CAPTION = 'Figures from the papers cited in each row. EEG: LSTM, the classifier of the original study, against the same model under the rapid-event design of Li et al. (2021), Table 5. Beery: 100 minus the reported top-1 error.'
+RESEARCH = sorted(PAPERS + [read_article(f) for f in sorted(ARTICLES.iterdir()) if f.is_dir()], key=lambda r: r['date'], reverse=True)
 
 
-def chart_svg():
+def chart_svg(chart):
+    rows = [(r['label'], r['source'], r['shared_context'], r['kept_apart'], r['chance']) for r in chart['rows']]
     w, left, right, row_h, top = 520, 40, 492, 78, 10
     x = lambda v: left + (right - left) * v / 100
-    bottom = top + len(CHART_ROWS) * row_h
-    gaps = [leaky - proper for _, _, leaky, proper, _ in CHART_ROWS]
+    bottom = top + len(rows) * row_h
+    gaps = [leaky - proper for _, _, leaky, proper, _ in rows]
     title = f'Same model, two tests: the leaky test scores {round(min(gaps))} to {round(max(gaps))} points higher'
     out = [f'<svg viewBox="0 0 {w} {bottom + 34}" role="img" aria-labelledby="effect-title" class="effect-chart"><title id="effect-title">{escape(title)}</title>']
     for t in (0, 25, 50, 75, 100):
         out.append(f'<line x1="{x(t):.1f}" y1="{top + 26}" x2="{x(t):.1f}" y2="{bottom - 4}" class="c-grid"/><text x="{x(t):.1f}" y="{bottom + 18}" text-anchor="middle" class="c-note">{t}%</text>')
-    for i, (label, src, leaky, proper, chance) in enumerate(CHART_ROWS):
+    for i, (label, src, leaky, proper, chance) in enumerate(rows):
         y = top + i * row_h
         cy = y + 52
         out.append(f'<text x="0" y="{y + 14}" class="c-label">{escape(label)}<tspan class="c-src"> · {escape(src)}</tspan></text>')
@@ -85,7 +92,7 @@ def chart_svg():
     out.append('</svg>')
     legend = ('<p class="chart-legend"><span><i class="k-leaky"></i>test shares a session, site or time block with training</span>'
               '<span><i class="k-proper"></i>kept apart</span><span><i class="k-chance"></i>chance</span></p>')
-    return f'<figure class="chart-figure"><p class="chart-title">{escape(title)}</p>{legend}{"".join(out)}<figcaption>{escape(CHART_CAPTION)}</figcaption></figure>'
+    return f'<figure class="chart-figure"><p class="chart-title">{escape(title)}</p>{legend}{"".join(out)}<figcaption>{escape(chart['caption'])}</figcaption></figure>'
 
 
 LINK = re.compile(r'\[([^\]]+)\]\((<[^>]+>|[^)\s]+)\)|\*\*(.+?)\*\*')
@@ -108,12 +115,12 @@ def slug(t):
     return re.sub(r'[^a-z0-9]+', '-', t.lower()).strip('-')
 
 
-def markdown_html(md):
+def markdown_html(md, chart=None):
     html, refs = [], False
     for block in [b.strip('\n') for b in re.split(r'\n\s*\n', md) if b.strip()]:
         lines = block.split('\n')
         if block == '<!-- chart -->':
-            html.append(chart_svg())
+            html.append(chart_svg(chart))
         elif block.startswith('## '):
             text = block[3:].strip()
             refs = text == 'Sources'
@@ -132,7 +139,9 @@ def markdown_html(md):
 
 
 def research_card(r):
-    return f'<article class="paper-box research-item"><span class="tag">{escape(r["kind"])}</span><h3><a href="{r["path"]}">{escape(r["title"])}</a></h3><p>{escape(r["summary"])}</p><a class="link" href="{r["path"]}">Read it ↗</a></article>'
+    return (f'<article class="paper-box research-item"><p class="research-meta"><span class="tag">{escape(r["kind"])}</span>'
+            f'<time datetime="{r["date"]}">{long_date(r["date"])}</time></p><h3><a href="{r["path"]}">{escape(r["title"])}</a></h3>'
+            f'<p>{escape(r["summary"])}</p><a class="link" href="{r["path"]}">Read it ↗</a></article>')
 
 
 page('/research/', 'Research', 'Xeroth’s AI research papers and articles on what machine learning learns from biological recordings, with sources, code and data.',
@@ -142,14 +151,13 @@ page('/research/', 'Research', 'Xeroth’s AI research papers and articles on wh
      f'<section class="section research-list">{"".join(research_card(r) for r in RESEARCH)}</section>', 'Research')
 
 for r in RESEARCH:
-    if 'source' not in r:
+    if r['kind'] != 'Article':
         continue
-    lead, rest = (CONTENT / r['source']).read_text().split('\n\n', 1)
-    page(r['path'], r['title'], lead[:300].rsplit(' ', 1)[0] + '…',
-         f'<div class="subhero"><div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/research/">Research</a> / {escape(r["kind"])}</div>'
-         f'<div class="eyebrow">{escape(r["kind"])}</div><h1>{escape(r["title"])}</h1><p class="lead">{inline(lead)}</p><p class="fine">By Graham Wallington</p></div>'
-         f'<article class="article">{markdown_html(rest)}</article>', 'Research')
-
+    page(r['path'], r['title'], r['summary'],
+         f'<div class="subhero"><div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/research/">Research</a> / Article</div>'
+         f'<div class="eyebrow">Article</div><h1>{escape(r["title"])}</h1><p class="lead">{inline(r["lead"])}</p>'
+         f'<p class="fine">By {escape(r["author"])} · <time datetime="{r["date"]}">{long_date(r["date"])}</time></p></div>'
+         f'<article class="article">{markdown_html(r["body"], r["chart"])}</article>', 'Research')
 (ROOT/'404.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Page not found · OpenXeroth</title><link rel="stylesheet" href="/assets/site.css"><main class="wrap subhero"><h1>Off the trail.</h1><p>We could not find that page.</p><a class="button" href="/">Return to OpenXeroth</a></main></html>')
 (ROOT/'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: https://open.xeroth.ai/sitemap.xml\n')
 (ROOT/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join(f'<url><loc>https://open.xeroth.ai{p}</loc></url>' for p in ['/','/naturecam/','/djuma-birds/','/research/']+[r['path'] for r in RESEARCH])+'</urlset>')

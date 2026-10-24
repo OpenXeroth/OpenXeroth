@@ -1,3 +1,12 @@
+---
+title: What biological AI models actually learn
+date: 2026-10-24
+author: Graham Wallington
+summary: Across bioacoustics, ecology, plant science, neuroscience, medicine and chemistry, models reported as near-perfect have repeatedly been recognising where, when and with what a measurement was taken, rather than the organism. The evidence field by field, from the primary sources, and five checks that expose it.
+---
+
+# What biological AI models actually learn
+
 Across bioacoustics, ecology, plant science, neuroscience, medicine and chemistry, machine-learning models reported as near-perfect have repeatedly turned out to be recognising where, when and with what a measurement was taken, rather than the organism itself. This article sets out the evidence field by field, from the primary sources, and the checks that expose it.
 
 ## Every biological measurement carries two signals

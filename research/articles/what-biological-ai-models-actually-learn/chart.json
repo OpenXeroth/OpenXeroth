@@ -1,0 +1,47 @@
+{
+  "caption": "Figures from the papers cited in each row. EEG: LSTM, the classifier of the original study, against the same model under the rapid-event design of Li et al. (2021), Table 5. Beery: 100 minus the reported top-1 error.",
+  "rows": [
+    {
+      "label": "EEG, 40 object classes",
+      "source": "Spampinato et al. 2017; Li et al. 2021",
+      "shared_context": 82.9,
+      "kept_apart": 2.9,
+      "chance": 2.5
+    },
+    {
+      "label": "EEG recorded from watermelons, 4 classes",
+      "source": "Xu et al. 2024",
+      "shared_context": 88.7,
+      "kept_apart": 24.7,
+      "chance": 25.0
+    },
+    {
+      "label": "Leaf disease, 38 classes",
+      "source": "Mohanty et al. 2016",
+      "shared_context": 99.35,
+      "kept_apart": 31.4,
+      "chance": 2.6
+    },
+    {
+      "label": "Camera-trap species, new camera locations",
+      "source": "Beery et al. 2018",
+      "shared_context": 80.9,
+      "kept_apart": 59.0,
+      "chance": null
+    },
+    {
+      "label": "Camera-trap species, 36 locations",
+      "source": "Schneider et al. 2020",
+      "shared_context": 95.6,
+      "kept_apart": 68.7,
+      "chance": null
+    },
+    {
+      "label": "Sea turtle re-identification, 438 turtles",
+      "source": "Adam et al. 2024",
+      "shared_context": 83.2,
+      "kept_apart": 47.6,
+      "chance": null
+    }
+  ]
+}
