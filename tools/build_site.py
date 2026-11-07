@@ -59,10 +59,39 @@ NATURECAM_COMPONENTS = [
     ),
 ]
 
-component_cards = ''.join(
-    f'<article class="card"><h3><a href="/naturecam/{slug}/">{name}</a></h3><p>{summary}</p></article>'
-    for slug, name, summary, _ in NATURECAM_COMPONENTS
-)
+naturecam_flow = """
+<figure class="naturecam-flow">
+  <div class="flow-camera"><strong>Djuma Cam</strong><span>Live picture and sound</span></div>
+  <div class="flow-branches">
+    <section class="flow-branch">
+      <h3>Camera control</h3>
+      <ol role="list">
+        <li class="flow-node"><a href="/naturecam/zoomie-dashboard/">Zoomie dashboard</a><span>Volunteers see the live picture and send camera moves back.</span></li>
+      </ol>
+    </section>
+    <section class="flow-branch">
+      <h3>Live broadcast</h3>
+      <ol role="list">
+        <li class="flow-node"><a href="/naturecam/guardian/">Guardian</a><span>Shows a standby video if the live feed drops.</span></li>
+        <li class="flow-node"><a href="/naturecam/restreamer/">Restreamer</a><span>Sends the broadcast to YouTube.</span></li>
+        <li class="flow-node flow-destination"><a href="https://www.youtube.com/@djumacam/live">YouTube</a><span>Viewers watch the broadcast.</span></li>
+      </ol>
+    </section>
+    <section class="flow-branch">
+      <h3>Sighting recordings</h3>
+      <ol role="list">
+        <li class="flow-node"><a href="/naturecam/sentinel/">Sentinel</a><span>Records the original camera footage and looks for wildlife.</span></li>
+        <li class="flow-node flow-destination"><strong>Sightings archive</strong><span>Selected clips are saved for review and research.</span></li>
+      </ol>
+    </section>
+  </div>
+  <figcaption>Sentinel records straight from the camera feed, before Guardian can switch to standby.</figcaption>
+</figure>"""
+zoomie_screenshot = """
+<figure class="zoomie-screenshot">
+  <img src="/assets/zoomie-dashboard.jpg" alt="The Djuma Zoomie dashboard showing two birds in the night camera view, with directional and zoom controls on the right." width="1440" height="675">
+  <figcaption>The Djuma Zoomie dashboard. The camera view is on the left and the controls are on the right. <a href="/assets/zoomie-dashboard.jpg">View full size</a>.</figcaption>
+</figure>"""
 page('/naturecam/', 'NatureCam: software for live wildlife cameras',
      'NatureCam helps people operate live wildlife cameras, keep their broadcasts running and save footage of sightings. It began at Djuma in South Africa.', f'''
 <section class="hero"><div>
@@ -73,7 +102,7 @@ page('/naturecam/', 'NatureCam: software for live wildlife cameras',
 <p>NatureCam began at Djuma Cam, which looks out over Gowrie Dam in the Sabi Sand. Djuma is the only camera NatureCam operates today. The aim is to make the software available to other nature camera teams so they can run their own broadcasts and build records of wildlife where they are.</p>
 <div class="actions"><a class="button" href="https://www.youtube.com/@djumacam/live">Watch Djuma Cam live on YouTube <span>↗</span></a><a class="button secondary" href="/djuma-birds/">Listen to bird calls</a></div>
 </div>{scene}</section>
-<section class="section" id="naturecam"><h2>What runs Djuma Cam</h2><div class="naturecam-grid">{component_cards}</div></section>
+<section class="section" id="naturecam"><h2>How NatureCam fits together</h2>{naturecam_flow}</section>
 <section class="section"><div class="prose"><h2>From live viewing to research</h2>
 <p>A live camera lets people share a view of the waterhole. Saving the footage lets researchers return to a sighting, compare what happened on different days and test tools that could help operators find and follow animals. <a href="/research/">Explore the research</a>.</p>
 </div></section>''', 'NatureCam')
@@ -87,7 +116,7 @@ for slug, name, summary, content in NATURECAM_COMPONENTS:
 <div class="subhero">
 <div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/naturecam/">NatureCam</a> / {name}</div>
 <h1>{name}</h1><p class="lead">{summary}</p>
-</div>
+</div>{zoomie_screenshot if slug == "zoomie-dashboard" else ""}
 <article class="article">{content}
 <h2>Other NatureCam components</h2><nav aria-label="Other NatureCam components">{component_links}</nav>
 </article>''', 'NatureCam')
