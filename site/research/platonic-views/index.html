@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Can different kinds of AI learn a similar picture of the world? · OpenXeroth</title><meta name="description" content="A plain-English guide to our satellite research: world models, the Platonic Representation Hypothesis, good views and the evidence from radar and optical encoders."><meta name="theme-color" content="#738878"><link rel="icon" href="/assets/xeroth-green.png"><link rel="canonical" href="https://open.xeroth.ai/research/platonic-views/"><meta property="og:title" content="Can different kinds of AI learn a similar picture of the world? · OpenXeroth"><meta property="og:description" content="A plain-English guide to our satellite research: world models, the Platonic Representation Hypothesis, good views and the evidence from radar and optical encoders."><link rel="stylesheet" href="/assets/site.css"><meta name="robots" content="noindex, nofollow"><link rel="stylesheet" href="/assets/platonic-views.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="top"><div class="wrap"><div class="nav"><a class="brand" href="/" aria-label="OpenXeroth home"><img src="/assets/xeroth-green.png" alt="" width="40" height="40">Open<span>Xeroth</span></a><nav aria-label="Main navigation"><a href="/naturecam/">NatureCam</a><a href="/djuma-birds/">Djuma birds</a><a href="/research/" aria-current="page">Research</a><a href="https://base.xeroth.ai/">Base stations</a><a class="nav-github" href="https://github.com/OpenXeroth">GitHub ↗</a></nav></div></div></header><main id="main" class="wrap"><div class="subhero pv-intro">
+  <div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/research/">Research</a> / Platonic views</div>
+  <div class="eyebrow">Satellite representations · Research in preparation</div>
+  <h1>Different sensors.<br><em>A similar picture of the world?</em></h1>
+  <p class="lead">A radar satellite and a camera see the same landscape in very different ways. Can two AI systems, trained separately, learn to agree about which places are alike? We found that changing which observations they learn to pair makes a measurable difference.</p>
+  <p class="fine">Graham Wallington &amp; Jackie Lighten · Xeroth AI Limited · Manuscript revision 1.3 · 10 November 2026</p>
+  <div class="actions"><a class="button" href="#experiment">See the experiment <span aria-hidden="true">↓</span></a><a class="button secondary" href="#paper">Paper, code &amp; evidence <span aria-hidden="true">↓</span></a></div>
+</div>
+<div class="notice pv-publication"><strong>Publication in preparation.</strong> The manuscript has not yet been published on arXiv. The artifact DOI is reserved; code, models and evaluation files are staged for release. Resource links below are labelled with their current status.</div>
+
+<figure class="pv-scene">
+<div class="pv-sensor-grid"><div><h3>Optical<span>Reflected sunlight</span></h3><svg viewBox="0 0 360 180" class="pv-optical" role="img" aria-labelledby="pv-optical-title"><title id="pv-optical-title">Illustrated river, fields and hills as a optical view</title><rect width="360" height="180" rx="8"/><path d="M0 65L85 8l100 80 70-48 105 46v94H0Z" class="pv-hills"/><path d="M0 137L130 93l135 47 95-26v66H0Z" class="pv-ground"/><path d="M227 0q-90 42-35 80t-8 100" class="pv-river"/><path d="M21 102l68-24 39 30-71 25Zm36 41 76-27 38 29-75 29Zm179-39 57-14 36 30-61 17Z" class="pv-fields"/></svg><p class="pv-sensor-model">Optical model</p></div><div><h3>Radar<span>Returned radio waves</span></h3><svg viewBox="0 0 360 180" class="pv-radar" role="img" aria-labelledby="pv-radar-title"><title id="pv-radar-title">Illustrated river, fields and hills as a radar view</title><rect width="360" height="180" rx="8"/><path d="M0 65L85 8l100 80 70-48 105 46v94H0Z" class="pv-hills"/><path d="M0 137L130 93l135 47 95-26v66H0Z" class="pv-ground"/><path d="M227 0q-90 42-35 80t-8 100" class="pv-river"/><path d="M21 102l68-24 39 30-71 25Zm36 41 76-27 38 29-75 29Zm179-39 57-14 36 30-61 17Z" class="pv-fields"/></svg><p class="pv-sensor-model">Radar model</p></div></div><p class="pv-sensor-summary">Same ground. Trained separately. Compared afterwards.</p>
+  <figcaption>Conceptual illustration, not satellite imagery. Optical and radar measurements carry different information about the same ground. The models never see the other sensor’s images during training.</figcaption>
+</figure>
+
+<section class="section prose" id="world-models">
+  <div class="eyebrow">01 / The bigger question</div>
+  <h2>What is a world model?</h2>
+  <p>You can recognise a road in sunshine or rain, and imagine what might happen if a car turns into it. A useful world model would give an AI system an internal description of its surroundings that helps it predict what happens next, including the effects of actions.</p>
+  <p>A <strong>representation</strong> is one ingredient: a compact description of an observation, stored as numbers. It can preserve useful properties while leaving out details. A map, for example, keeps the road layout without drawing every leaf.</p>
+  <p>Our research asks what makes two independently learned representations more alike. This could inform the representations used in world models. We did not train or test a system that forecasts events, plans actions or simulates the world.</p>
+</section>
+
+<section class="section" id="theory">
+  <div class="eyebrow">02 / Two ideas behind the experiment</div>
+  <h2>Why might separate models agree?</h2>
+  <article class="finding"><span class="num">01</span><div>
+    <h3>The Platonic Representation Hypothesis</h3>
+    <p>Imagine two people drawing maps of the same town from different walks. Their maps may look different, yet place the same streets near one another. Huh and colleagues proposed that AI models can also come to organise observations in increasingly similar ways as they grow. The “Platonic” idea is that different observations might lead towards a shared statistical description of the world. It is a hypothesis, with limitations and counterexamples. <a href="https://proceedings.mlr.press/v235/huh24a.html">Read the original paper ↗</a></p>
+    <p>We kept model size and training budget fixed. Our experiment asks about training pairs, rather than whether larger models converge.</p>
+  </div></article>
+  <article class="finding"><span class="num">02</span><div>
+    <h3>Good views and the theorem behind them</h3>
+    <p>When a model is taught that two pictures belong together, it has a reason to keep what they share. Two crops of one photograph can share both the scene and the quirks of that exposure. Two separate observations may share the scene while changing the lighting or measurement noise. Those can encourage different kinds of similarity.</p>
+    <p>Balestriero and LeCun’s Platonic Representation Theorem gives conditions under which separately trained models learn the same arrangement of world states, allowing for a rotation of their numerical coordinates. Their good-view analysis explains why independently varying observation quirks can help. It depends on idealised assumptions about the observations, the pairing relationships and the learning objective. <a href="https://arxiv.org/html/2610.39302v1#S2">Read the theorem and good-view analysis ↗</a></p>
+    <p>Real satellite passes also change season, viewing geometry and sometimes the ground itself. We tested an empirical prediction inspired by this theory; we did not establish its assumptions or verify its mathematical bound.</p>
+  </div></article>
+</section>
+
+<section class="section" id="experiment">
+  <div class="eyebrow">03 / The experiment</div>
+  <h2>Same images.<br>Different partners.</h2>
+  <div class="pv-copy"><p>We trained one set of models on Sentinel-1 radar and another on Sentinel-2 optical imagery. Each model learned only from its own sensor. Within each sensor and random seed, the two training methods used the same starting weights, sampled images, crop windows and training budget. We changed which crops were paired.</p>
+  <p>Each step supplied two crops from date A and two from date B, all of the same place. Switch the diagram to see the two pairing rules.</p></div>
+  <figure class="pv-pairing" data-pairing="same">
+    <div class="pv-controls" role="group" aria-label="Choose a training pairing rule" hidden>
+      <button type="button" data-rule="same" aria-pressed="true">Two crops of one observation</button>
+      <button type="button" data-rule="dates" aria-pressed="false">Crops from repeat observations</button>
+    </div>
+    <div class="pv-pair-dates" aria-hidden="true"><span>DATE A</span><span>DATE B</span></div>
+    <div class="pv-crop-grid">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-labelledby="pv-pair-title pv-pair-desc">
+        <title id="pv-pair-title">Two crops of each satellite observation are paired</title>
+        <desc id="pv-pair-desc">A1 pairs with A2 from date A. B1 pairs with B2 from date B. The alternative pairs A1 with B2 and B1 with A2.</desc>
+        <g class="pv-pair-links pv-same-links"><path d="M22 25v50M78 25v50"/></g>
+        <g class="pv-pair-links pv-date-links"><path d="M22 25L78 75M22 75L78 25"/></g>
+      </svg>
+      <div class="pv-crop">A1<span>Crop 1 · date A</span></div><div class="pv-crop pv-crop-b">B1<span>Crop 1 · date B</span></div>
+      <div class="pv-crop">A2<span>Crop 2 · date A</span></div><div class="pv-crop pv-crop-b">B2<span>Crop 2 · date B</span></div>
+    </div>
+    <p class="pv-pair-summary">All four inputs stay the same. Only the connections change.</p>
+    <figcaption><span id="pv-pair-caption" aria-live="polite">Same-observation training pairs A1 with A2, and B1 with B2. Across-date training instead pairs A1 with B2, and B1 with A2.</span> This schematic applies separately to each sensor; the lines never connect radar to optical images.</figcaption>
+    <noscript><p class="fine">Repeat-observation pairs connect A1 to B2 and B1 to A2. Both rules use all four crops shown above.</p></noscript>
+  </figure>
+  <div class="stats pv-stats"><div class="stat"><span class="big-number">2</span><small>sensors, trained independently</small></div><div class="stat"><span class="big-number">24</span><small>trained encoders across pairing rules, crop recipes and three random seeds</small></div><div class="stat"><span class="big-number">5m</span><small>training pairs per model</small></div></div>
+  <p class="fine pv-note">The encoders used the same ResNet-50 architecture and LeJEPA learning method. We compared a simple crop recipe and a stronger recipe that also changes scale, orientation and band values.</p>
+</section>
+
+<section class="section" id="agreement">
+  <div class="eyebrow">04 / How we measured agreement</div>
+  <h2>Do they choose similar neighbours?</h2>
+  <div class="pv-copy"><p>For each test place, we asked each model for the ten places it considered most similar within its geographic block. We measured how much the two lists overlapped. Higher overlap means the models organise those places more similarly. It does not mean the radar and optical pictures look alike.</p>
+  <p>This comparison uses each model’s own representation, with no fitted conversion between the sensors. Test geography was kept out of training.</p></div>
+  <figure class="pv-neighbours">
+    <div class="pv-neighbour-row"><strong>Optical model</strong><div class="pv-places"><span class="pv-shared">River</span><span>Town</span><span class="pv-shared">Forest</span><span>Coast</span><span>Quarry</span></div></div>
+    <div class="pv-neighbour-row"><strong>Radar model</strong><div class="pv-places"><span>Hill</span><span class="pv-shared">Forest</span><span>Field</span><span class="pv-shared">River</span><span>Lake</span></div></div>
+    <figcaption>Illustration with five neighbours: two are shared, so overlap is 40%. Highlighted names stand for individual places, not model-generated labels. The experiment uses ten neighbours.</figcaption>
+  </figure>
+  <div class="pv-copy"><p>We also tested whether a radar observation could find the optical observation of the same place on another date. In that original test, repeat-observation training increased the fraction of matched alternatives beaten by <strong>24.9 percentage points</strong> under stronger augmentation (95% geographic interval: 21.4–28.1). This is a ranking score, rather than a percentage of places identified correctly.</p></div>
+</section>
+
+<section class="section" id="results">
+  <div class="eyebrow">05 / What we found</div>
+  <h2>More agreement.<br>On new ground, too.</h2>
+  <p class="pv-copy">These charts show the overlap of the models’ top ten neighbours under the stronger crop recipe. Each geographic block receives equal weight.</p>
+  <div class="pv-results">
+    <figure class="pv-result">
+      <h3>Original benchmark</h3><p class="fine">3,405 places · 32 held-out geographic blocks<br>Radar and optical observations within 15 days</p>
+      <div class="pv-bar-row"><span>Same observation</span><div class="pv-track"><div class="pv-bar pv-before" style="--value:34.5%"></div></div><strong>34.5%</strong></div>
+      <div class="pv-bar-row"><span>Repeat observations</span><div class="pv-track"><div class="pv-bar" style="--value:46.1%"></div></div><strong>46.1%</strong></div>
+      <div class="pv-scale" aria-hidden="true"><span>0%</span><span>Shared neighbours</span><span>100%</span></div>
+      <p class="pv-result-gain">+11.6 percentage points</p><figcaption>95% interval for the gain: 9.3–13.8 points. Chance overlap: 26.1%. Mean gain positive in 31 of 32 blocks.</figcaption>
+    </figure>
+    <figure class="pv-result">
+      <h3>Independent dataset: SEN12TP</h3><p class="fine">996 paired crops · 40 new geographic blocks<br>Radar and optical observations within 7.9 hours</p>
+      <div class="pv-bar-row"><span>Same observation</span><div class="pv-track"><div class="pv-bar pv-before" style="--value:53.8%"></div></div><strong>53.8%</strong></div>
+      <div class="pv-bar-row"><span>Repeat observations</span><div class="pv-track"><div class="pv-bar" style="--value:58.5%"></div></div><strong>58.5%</strong></div>
+      <div class="pv-scale" aria-hidden="true"><span>0%</span><span>Shared neighbours</span><span>100%</span></div>
+      <p class="pv-result-gain">+4.7 percentage points</p><figcaption>95% interval for the gain: 2.9–6.4 points. Chance overlap: 41.9%. Frozen models; no further training.</figcaption>
+    </figure>
+  </div>
+  <p class="fine pv-note">These are measured results, unlike the conceptual diagrams above. Chance overlap differs because the sets of candidate neighbours differ; the two datasets’ percentages are not directly comparable. Intervals reflect geographic variation for the three fitted training seeds, rather than all uncertainty from training. Source: manuscript sections 4.2 and 4.3.</p>
+</section>
+
+<section class="section" id="limits">
+  <div class="eyebrow">06 / What the result means</div>
+  <h2>What you keep depends<br>on what you ask to stay the same.</h2>
+  <div class="pv-copy"><p>Recognising a place across dates rewards stability. Monitoring that place can require sensitivity to change. After repeat-observation training, a simple linear readout recovered less of the optical vegetation-index change: its R² score fell from 0.927 to 0.752. That score describes how well this particular readout explained the measured change; it does not show that the model lost all information about change.</p></div>
+  <div class="pv-tradeoff" role="img" aria-label="Repeat-observation training increased agreement about similar places, while a fitted linear readout recovered less vegetation-index change.">
+    <div><span class="pv-direction" aria-hidden="true">↑</span><strong>Agreement about places</strong><span>Radar and optical models chose more of the same neighbours.</span></div>
+    <div><span class="pv-direction" aria-hidden="true">↓</span><strong>Change recovered by one readout</strong><span>A linear optical readout explained less vegetation-index change.</span></div>
+  </div>
+  <article class="finding"><span class="num">01</span><div><h3>The pairing comparison bundles several effects.</h3><p>The same-observation crops shared at least 76.6% of their area before augmentation, including repeated measurements of the same pixels. Repeat observations change both those measurements and date-related conditions. We have no control with disjoint same-observation crops, so we cannot say which part caused the gain.</p></div></article>
+  <article class="finding"><span class="num">02</span><div><h3>Shared structure can be quite ordinary.</h3><p>Land cover and terrain can make places look similar to both sensors. More agreement does not establish a shared understanding of physics, or that the models encode every place’s unique identity. We tested one model family at one training budget.</p></div></article>
+  <article class="finding"><span class="num">03</span><div><h3>The evidence is about representations.</h3><p>The result supports a practical conclusion: choosing which observations belong together can change what independently trained models share. Whether that helps prediction, planning or a particular monitoring task needs its own test.</p></div></article>
+</section>
+
+<section class="section" id="paper">
+  <div class="eyebrow">Read the paper. Inspect the methods.</div>
+  <h2>The paper and its evidence.</h2>
+  <div class="paper-box">
+    <span class="tag">Manuscript 1.3 · publication pending</span>
+    <h3 class="pv-paper-title">Pairing repeat satellite passes increases agreement between separately trained radar and optical encoders</h3>
+    <p>Graham Wallington &amp; Jackie Lighten · Xeroth AI Limited</p>
+    <div class="actions"><span class="pv-pending">arXiv preprint · not yet published</span><a class="button secondary" href="https://github.com/OpenXeroth/platonic-views-artifacts/blob/paper-v1.3/docs/paper.pdf">Author manuscript · PDF ↗</a></div>
+    <p class="pv-note">The manuscript link points to the staged publication repository and requires access until it is made public. An arXiv link will be added when an identifier is assigned. The artifact DOI below is a reservation and will resolve after its Zenodo record is published.</p>
+    <p><strong>Reserved artifact DOI:</strong> <a href="https://doi.org/10.5281/zenodo.24102082">10.5281/zenodo.24102082 ↗</a> · Zenodo publication pending.</p>
+  </div>
+  <div class="grid3 pv-resources">
+    <article class="card"><span class="number">Code · staged private</span><h3>The publication repository</h3><p>Curated source, manuscript and versioned results for this study.</p><a class="link" href="https://github.com/OpenXeroth/platonic-views-artifacts">Repository ↗</a><br><a class="link" href="https://github.com/OpenXeroth/platonic-views-artifacts/tree/paper-v1.3">Code snapshot · paper-v1.3 ↗</a></article>
+    <article class="card"><span class="number">Results · staged private</span><h3>Numbers you can inspect</h3><p>Result tables, machine-readable outputs and the method for reproducing scores from the saved evaluation files.</p><a class="link" href="https://github.com/OpenXeroth/platonic-views-artifacts/blob/paper-v1.3/results/tables.md">Results and tables ↗</a><br><a class="link" href="https://github.com/OpenXeroth/platonic-views-artifacts/tree/paper-v1.3/results">Result files ↗</a><br><a class="link" href="https://github.com/OpenXeroth/platonic-views-artifacts/blob/paper-v1.3/README.md">Reproduction instructions ↗</a></article>
+    <article class="card"><span class="number">Hugging Face · staged private</span><h3>Models &amp; evaluation inputs</h3><p>Encoder weights and evaluation files remain at paper-v1.2. Revision 1.3 adds reporting and checks without changing those weights or scoring inputs.</p><a class="link" href="https://huggingface.co/Xeroth/platonic-views-encoders/tree/paper-v1.2">Trained models ↗</a><br><a class="link" href="https://huggingface.co/datasets/Xeroth/platonic-views-evaluation/tree/paper-v1.2">Evaluation files ↗</a></article>
+  </div>
+  <p class="fine pv-note">The staged materials currently require permission from their owners. Original datasets retain their publishers’ licence terms. Source imagery: <a href="https://huggingface.co/datasets/embed2scale/SSL4EO-S12-v1.1/tree/97a91733db962222e1e6b40a836845ddbbb16b86">SSL4EO-S12 v1.1 ↗</a>. The manuscript and repository document provenance, reproduction requirements and limitations.</p>
+</section>
+</main><footer><div class="wrap footer-row"><div><span>OpenXeroth is part of <a href="https://xeroth.ai">Xeroth</a>.</span></div><div class="footer-links"><a href="https://www.youtube.com/@djumacam">Djuma Cam on YouTube ↗</a><a href="https://github.com/OpenXeroth">GitHub ↗</a><a href="https://www.djuma.com/djumacam">The Djuma story ↗</a></div></div></footer><script type="module" src="/assets/platonic-views.js"></script></body></html>
