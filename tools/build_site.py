@@ -233,6 +233,8 @@ def markdown_html(md, chart=None):
         elif all(l.startswith('- ') for l in lines):
             items = ''.join(f'<li>{inline(l[2:])}</li>' for l in lines)
             html.append(('<ul class="refs">' if refs else '<ul>') + items + '</ul>')
+        elif all(re.match(r'\d+\. ', l) for l in lines):
+            html.append('<ol>' + ''.join(f'<li>{inline(l.split(". ", 1)[1])}</li>' for l in lines) + '</ol>')
         else:
             html.append(f'<p>{inline(" ".join(l.strip() for l in lines))}</p>')
     return ''.join(html)
@@ -244,9 +246,9 @@ def research_card(r):
             f'<p>{escape(r["summary"])}</p><a class="link" href="{r["path"]}">Read it ↗</a></article>')
 
 
-page('/research/', 'Research', 'Xeroth’s AI research papers and articles on what machine learning learns from biological recordings, with sources, code and data.',
+page('/research/', 'Research', 'Xeroth’s AI research papers and articles, with sources, code and data.',
      '<div class="subhero"><div class="breadcrumbs"><a href="/">OpenXeroth</a> / Research</div><div class="eyebrow">OpenXeroth research</div>'
-     '<h1>Research papers<br><em>and articles.</em></h1><p class="lead">Xeroth’s research on artificial intelligence and biological data. '
+     '<h1>Research papers<br><em>and articles.</em></h1><p class="lead">Xeroth’s research on artificial intelligence. '
      'Papers link to their code, data and evidence. Articles link to every source they cite.</p></div>'
      f'<section class="section research-list">{"".join(research_card(r) for r in RESEARCH)}</section>', 'Research')
 
