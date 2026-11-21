@@ -6,10 +6,15 @@ repo = 'https://github.com/OpenXeroth/acoustic-re-id-research'
 preprint = 'https://www.biorxiv.org/content/10.64898/2026.10.08.757537v1'
 preprint_doi = 'https://doi.org/10.64898/2026.10.08.757537'
 
-def page(path, title, description, body, active='', script=False, extra_script=''):
+def page(path, title, description, body, active='', script=False, extra_script='', figure=None):
     links = [('/naturecam/', 'NatureCam'), ('/djuma-birds/', 'Djuma birds'), ('/research/', 'Research'), ('https://base.xeroth.ai/', 'Base stations')]
     nav = ''.join(f'<a href="{u}"'+(' aria-current="page"' if n == active else '')+f'>{n}</a>' for u,n in links)
-    content = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · OpenXeroth</title><meta name="description" content="{escape(description)}"><meta name="theme-color" content="#738878"><link rel="icon" href="/assets/xeroth-green.png"><link rel="canonical" href="https://open.xeroth.ai{path}"><meta property="og:title" content="{escape(title)} · OpenXeroth"><meta property="og:description" content="{escape(description)}"><link rel="stylesheet" href="/assets/site.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="top"><div class="wrap"><div class="nav"><a class="brand" href="/" aria-label="OpenXeroth home"><img src="/assets/xeroth-green.png" alt="" width="40" height="40">Open<span>Xeroth</span></a><nav aria-label="Main navigation">{nav}<a class="nav-github" href="https://github.com/OpenXeroth">GitHub ↗</a></nav></div></div></header><main id="main" class="wrap">{body}</main><footer><div class="wrap footer-row"><div><span>OpenXeroth is part of <a href="https://xeroth.ai">Xeroth</a>.</span></div><div class="footer-links"><a href="https://www.youtube.com/@djumacam">Djuma Cam on YouTube ↗</a><a href="https://github.com/OpenXeroth">GitHub ↗</a><a href="https://www.djuma.com/djumacam">The Djuma story ↗</a></div></div></footer>{'<script type="module" src="/assets/birds.js"></script>' if script else ''}{extra_script}</body></html>'''
+    # The picture link previews show (LinkedIn and others read og:image).
+    og = (f'<meta property="og:type" content="article"><meta property="og:url" content="https://open.xeroth.ai{path}">'
+          f'<meta property="og:image" content="https://open.xeroth.ai{figure["social"]}"><meta property="og:image:width" content="{figure["social_width"]}">'
+          f'<meta property="og:image:height" content="{figure["social_height"]}"><meta property="og:image:alt" content="{escape(figure["alt"])}">'
+          f'<meta name="twitter:card" content="summary_large_image">') if figure else ''
+    content = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · OpenXeroth</title><meta name="description" content="{escape(description)}"><meta name="theme-color" content="#738878"><link rel="icon" href="/assets/xeroth-green.png"><link rel="canonical" href="https://open.xeroth.ai{path}"><meta property="og:title" content="{escape(title)} · OpenXeroth"><meta property="og:description" content="{escape(description)}">{og}<link rel="stylesheet" href="/assets/site.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="top"><div class="wrap"><div class="nav"><a class="brand" href="/" aria-label="OpenXeroth home"><img src="/assets/xeroth-green.png" alt="" width="40" height="40">Open<span>Xeroth</span></a><nav aria-label="Main navigation">{nav}<a class="nav-github" href="https://github.com/OpenXeroth">GitHub ↗</a></nav></div></div></header><main id="main" class="wrap">{body}</main><footer><div class="wrap footer-row"><div><span>OpenXeroth is part of <a href="https://xeroth.ai">Xeroth</a>.</span></div><div class="footer-links"><a href="https://www.youtube.com/@djumacam">Djuma Cam on YouTube ↗</a><a href="https://github.com/OpenXeroth">GitHub ↗</a><a href="https://www.djuma.com/djumacam">The Djuma story ↗</a></div></div></footer>{'<script type="module" src="/assets/birds.js"></script>' if script else ''}{extra_script}</body></html>'''
     p = ROOT / path.strip('/') / 'index.html';p.parent.mkdir(parents=True, exist_ok=True);p.write_text(content)
 
 scene='''<div class="scene" role="img" aria-label="Illustration of the landscape around a waterhole, with an observation marker"><div class="scene-label">DJUMA · SOUTH AFRICA</div><svg viewBox="0 0 500 400" fill="none" aria-hidden="true"><circle cx="330" cy="88" r="48" fill="#f8f9ee"/><path d="M-20 250Q95 185 230 244T540 225V440H-20Z" fill="#ced9c1"/><path d="M-20 289Q105 225 255 280T530 265V420H-20Z" fill="#aabd9f"/><path d="M-20 335Q110 283 250 340T530 305V420H-20Z" fill="#8da389"/><path d="M200 352Q285 324 401 350Q470 369 504 398H93Q118 374 200 352" fill="#dce5d6"/><path d="M278 363L420 363M207 376H452M256 387H484" stroke="#aabd9f"/><path d="M84 317L95 154M94 212L66 181M93 205L122 174" stroke="#657f63" stroke-width="5"/><path d="M40 166Q49 133 83 142Q96 112 119 136Q153 125 163 159Q176 177 122 175Q79 188 40 166" fill="#6f8869"/><path d="M390 300L398 235M398 260L413 245" stroke="#718c6d" stroke-width="3"/><path d="M365 239Q376 217 393 225Q410 205 432 230Q444 247 412 246Z" fill="#7c9675"/><path d="M176 127l8-4 8 4M202 117l8-4 8 4" stroke="#728877" stroke-width="2"/></svg><div class="scene-cross"></div><div class="scene-chip"><strong>People · cameras · sound</strong>At Gowrie Dam</div><div class="scene-note">DJUMA CAM · SINCE 1998</div></div>'''
@@ -152,8 +157,10 @@ def read_article(folder):
     assert body.startswith(f"# {meta['title']}\n"), folder
     lead, rest = body.split('\n', 1)[1].lstrip('\n').split('\n\n', 1)
     chart = folder / 'chart.json'
+    figure = folder / 'figure.json'
     return {**meta, 'kind': 'Article', 'path': f'/research/{folder.name}/', 'lead': lead, 'body': rest,
-            'chart': json.loads(chart.read_text()) if chart.exists() else None}
+            'chart': json.loads(chart.read_text()) if chart.exists() else None,
+            'figure': json.loads(figure.read_text()) if figure.exists() else None}
 
 
 # Papers have hand-written guide pages above. Articles are every folder in research/articles/.
@@ -240,6 +247,11 @@ def markdown_html(md, chart=None):
     return ''.join(html)
 
 
+def figure_html(f):
+    return (f'<figure class="article-figure"><img src="{f["image"]}" alt="{escape(f["alt"])}" width="{f["width"]}" height="{f["height"]}">'
+            f'<figcaption>{escape(f["caption"], quote=False)}</figcaption></figure>') if f else ''
+
+
 def research_card(r):
     return (f'<article class="paper-box research-item"><p class="research-meta"><span class="tag">{escape(r["kind"])}</span>'
             f'<time datetime="{r["date"]}">{long_date(r["date"])}</time></p><h3><a href="{r["path"]}">{escape(r["title"])}</a></h3>'
@@ -259,7 +271,7 @@ for r in RESEARCH:
          f'<div class="subhero"><div class="breadcrumbs"><a href="/">OpenXeroth</a> / <a href="/research/">Research</a> / Article</div>'
          f'<div class="eyebrow">Article</div><h1>{escape(r["title"])}</h1><p class="lead">{inline(r["lead"])}</p>'
          f'<p class="fine">By {escape(r["author"])} · <time datetime="{r["date"]}">{long_date(r["date"])}</time></p></div>'
-         f'<article class="article">{markdown_html(r["body"], r["chart"])}</article>', 'Research')
+         f'<article class="article">{figure_html(r["figure"])}{markdown_html(r["body"], r["chart"])}</article>', 'Research', figure=r['figure'])
 (ROOT/'404.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Page not found · OpenXeroth</title><link rel="stylesheet" href="/assets/site.css"><main class="wrap subhero"><h1>Off the trail.</h1><p>We could not find that page.</p><a class="button" href="/">Return to OpenXeroth</a></main></html>')
 (ROOT/'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: https://open.xeroth.ai/sitemap.xml\n')
 (ROOT/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join(f'<url><loc>https://open.xeroth.ai{p}</loc></url>' for p in ['/','/naturecam/','/djuma-birds/','/research/']+[f'/naturecam/{slug}/' for slug, _, _, _ in NATURECAM_COMPONENTS]+[r['path'] for r in RESEARCH])+'</urlset>')
